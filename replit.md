@@ -2,7 +2,9 @@
 
 ## Overview
 
-This is a Streamlit-based Python web application that processes PDF documents (primarily insurance policies) and provides intelligent decision-making through AI analysis. The system combines document processing, semantic search, and OpenAI's GPT-3.5-turbo model to analyze user queries against uploaded documents and provide structured decisions.
+This is a Streamlit-based Python web application that processes PDF documents (primarily insurance policies) and provides intelligent decision-making through AI analysis. The system combines document processing, semantic search, and OpenAI's GPT-4o model to analyze user queries against uploaded documents and provide structured decisions.
+
+**Latest Update (July 24, 2025)**: Enhanced the system with multi-tier search capabilities - advanced semantic search with sentence transformers, enhanced TF-IDF semantic search, and simple text-based search as fallbacks. The system now provides better semantic understanding and document analysis.
 
 ## User Preferences
 
@@ -38,13 +40,18 @@ The system is designed to run entirely in Replit without external dependencies b
   - No external NLP dependencies
 - **Design Decision**: Uses regex patterns instead of ML models to avoid external dependencies and ensure reliability
 
-### 3. Vector Search (`vector_search.py`)
-- **Purpose**: Provides semantic search capabilities using embeddings
-- **Key Features**:
-  - FAISS indexing for efficient similarity search
-  - Sentence transformer embeddings (all-MiniLM-L6-v2)
-  - Top-k document chunk retrieval
-- **Design Decision**: Uses FAISS for fast similarity search and sentence-transformers for quality embeddings
+### 3. Vector Search (Multi-tier approach)
+- **Advanced Search (`vector_search.py`)**: 
+  - FAISS indexing with sentence transformer embeddings (all-MiniLM-L6-v2)
+  - Highest quality semantic understanding
+- **Enhanced Search (`enhanced_vector_search.py`)**:
+  - TF-IDF vectorization with cosine similarity
+  - Medical domain term expansion and normalization
+  - Semantic query expansion for better matching
+- **Simple Search (`simple_vector_search.py`)**:
+  - Text-based keyword matching with Jaccard similarity
+  - Fallback option when ML dependencies unavailable
+- **Design Decision**: Multi-tier fallback ensures system works in all environments while providing best available search quality
 
 ### 4. OpenAI Client (`openai_client.py`)
 - **Purpose**: Handles AI-powered analysis and decision making

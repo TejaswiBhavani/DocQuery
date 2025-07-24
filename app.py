@@ -6,13 +6,17 @@ from document_processor import DocumentProcessor
 from query_parser import QueryParser
 from openai_client import OpenAIClient
 
-# Try to import advanced vector search, fallback to simple search
+# Try to import advanced vector search, fallback to simpler alternatives
 try:
     from vector_search import VectorSearch
-    ADVANCED_SEARCH_AVAILABLE = True
+    SEARCH_TYPE = "Advanced semantic search with sentence transformers"
 except ImportError:
-    from simple_vector_search import SimpleVectorSearch as VectorSearch
-    ADVANCED_SEARCH_AVAILABLE = False
+    try:
+        from enhanced_vector_search import EnhancedVectorSearch as VectorSearch
+        SEARCH_TYPE = "Enhanced semantic search with TF-IDF"
+    except ImportError:
+        from simple_vector_search import SimpleVectorSearch as VectorSearch
+        SEARCH_TYPE = "Simple text-based search"
 
 # Set page configuration
 st.set_page_config(
@@ -90,9 +94,8 @@ def main():
                     # Clean up temp file
                     os.unlink(tmp_file_path)
 
-                search_type = "Advanced semantic search" if ADVANCED_SEARCH_AVAILABLE else "Simple text-based search"
                 st.success(f"✅ Document processed successfully! Found {len(chunks)} text chunks.")
-                st.info(f"Using {search_type} for document analysis.")
+                st.info(f"Using {SEARCH_TYPE} for document analysis.")
                 
                 # Show document statistics
                 with st.expander("📊 Document Statistics"):

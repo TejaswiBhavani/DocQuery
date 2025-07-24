@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 from typing import Dict, List, Optional
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, Boolean, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.dialects.postgresql import JSON
@@ -61,7 +61,7 @@ class DatabaseManager:
             self.engine = create_engine(database_url, echo=False)
             # Test connection
             with self.engine.connect() as conn:
-                conn.execute("SELECT 1")
+                conn.execute(text("SELECT 1"))
             
             # Create tables if they don't exist
             Base.metadata.create_all(self.engine, checkfirst=True)

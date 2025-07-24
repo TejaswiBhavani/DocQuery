@@ -23,16 +23,91 @@ except ImportError:
 # Set page configuration
 st.set_page_config(
     page_title="AI Document Analysis System",
-    page_icon="📄",
-    layout="wide"
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 def main():
-    st.title("🤖 AI-Powered Document Analysis System")
+    # Custom CSS for better styling
     st.markdown("""
-    Upload documents (PDFs) and ask natural language questions to get intelligent decisions 
-    based on semantic document analysis and AI reasoning.
-    """)
+    <style>
+    .main-header {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        color: white;
+        text-align: center;
+    }
+    .main-header h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 600;
+    }
+    .main-header p {
+        margin: 0.5rem 0 0 0;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    .upload-section {
+        background-color: #f8f9fa;
+        border: 2px dashed #e9ecef;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .query-section {
+        background-color: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .results-section {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    .metric-card {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .success-card {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 8px;
+        padding: 1rem;
+        color: #155724;
+    }
+    .warning-card {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 1rem;
+        color: #856404;
+    }
+    .sidebar-section {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Modern header
+    st.markdown("""
+    <div class="main-header">
+        <h1>🤖 AI Document Analysis System</h1>
+        <p>Upload documents and ask natural language questions to get intelligent decisions based on semantic analysis</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Initialize session state
     if 'processed_documents' not in st.session_state:
@@ -54,50 +129,81 @@ def main():
         st.info("The app will continue to work without database features.")
         db = None
 
-    # Sidebar for configuration
+    # Enhanced Sidebar
     with st.sidebar:
-        st.header("⚙️ Configuration")
+        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+        st.markdown("### ⚙️ Configuration")
         
-        # OpenAI API Key input
+        # OpenAI API Key input with better styling
         api_key = st.text_input(
             "OpenAI API Key",
             type="password",
             help="Enter your OpenAI API key to enable AI analysis",
-            placeholder="sk-..."
+            placeholder="sk-proj-..."
         )
         
         if api_key:
             os.environ["OPENAI_API_KEY"] = api_key
-            st.success("✅ API Key configured")
+            st.markdown('<div class="success-card">✅ API Key configured successfully</div>', unsafe_allow_html=True)
         else:
-            st.warning("⚠️ Please enter your OpenAI API key to continue")
+            st.markdown('<div class="warning-card">⚠️ Please enter your OpenAI API key to continue</div>', unsafe_allow_html=True)
         
-        st.markdown("---")
-        st.subheader("🔍 Search History")
-        search_term = st.text_input("Search past queries", placeholder="Enter search term...")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Search functionality with better UX
+        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+        st.markdown("### 🔍 Search History")
+        search_term = st.text_input("Search past queries", placeholder="Type to search...", key="search_input")
         
         if search_term and db:
             try:
                 search_results = db.search_queries(search_term, limit=5)
                 if search_results:
-                    st.write("**Search Results:**")
+                    st.markdown("**Recent matches:**")
                     for result in search_results:
-                        st.write(f"• {result['query'][:40]}... → {result['decision']}")
+                        decision_color = "🟢" if result['decision'] == 'Approved' else "🔴"
+                        st.markdown(f"{decision_color} {result['query'][:35]}...")
                 else:
                     st.info("No matching queries found")
             except Exception as e:
                 st.error(f"Search error: {str(e)}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # System status
+        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+        st.markdown("### 📊 System Status")
+        st.markdown(f"**Search Engine:** {SEARCH_TYPE.split(' ')[0]} search")
+        if db:
+            st.markdown("**Database:** 🟢 Connected")
+        else:
+            st.markdown("**Database:** 🔴 Disconnected")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # Main content area
-    col1, col2 = st.columns([1, 1])
+    # Main content area with improved layout
+    col1, col2 = st.columns([1.2, 1], gap="large")
 
     with col1:
-        st.subheader("📁 Document Upload")
+        st.markdown("### 📁 Document Upload")
+        
+        # Custom upload area
+        st.markdown('<div class="upload-section">', unsafe_allow_html=True)
         uploaded_file = st.file_uploader(
-            "Upload a PDF document",
+            "Choose a PDF document",
             type=['pdf'],
-            help="Upload policy documents, contracts, or other PDFs for analysis"
+            help="Upload insurance policies, contracts, legal documents, or any PDF for AI analysis",
+            label_visibility="collapsed"
         )
+        
+        if not uploaded_file:
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem;">
+                <h4>📄 Drop your PDF here</h4>
+                <p>Supported formats: PDF files up to 200MB</p>
+                <p><em>Insurance policies • Contracts • Legal documents • Emails</em></p>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         if uploaded_file is not None:
             try:
@@ -141,35 +247,79 @@ def main():
                             st.warning(f"Database save failed: {str(db_error)}")
                             st.session_state.current_document_id = None
 
-                st.success(f"✅ Document processed successfully! Found {len(chunks)} text chunks.")
-                st.info(f"Using {SEARCH_TYPE} for document analysis.")
+                # Success message with better styling
+                st.markdown(f'''
+                <div class="success-card">
+                    <h4>✅ Document processed successfully!</h4>
+                    <p>Found <strong>{len(chunks)}</strong> text chunks • Using <strong>{SEARCH_TYPE.split(" ")[0]}</strong> search</p>
+                </div>
+                ''', unsafe_allow_html=True)
                 
-                # Show document statistics
-                with st.expander("📊 Document Statistics"):
-                    st.write(f"**Total characters:** {len(text_content):,}")
-                    st.write(f"**Text chunks:** {len(chunks)}")
-                    st.write(f"**Average chunk size:** {len(text_content) // len(chunks) if chunks else 0} characters")
+                # Document statistics in an attractive format
+                with st.expander("📊 Document Statistics", expanded=False):
+                    col_stat1, col_stat2, col_stat3 = st.columns(3)
+                    with col_stat1:
+                        st.metric("Characters", f"{len(text_content):,}")
+                    with col_stat2:
+                        st.metric("Text Chunks", len(chunks))
+                    with col_stat3:
+                        avg_size = len(text_content) // len(chunks) if chunks else 0
+                        st.metric("Avg Chunk Size", f"{avg_size:,}")
 
             except Exception as e:
                 st.error(f"❌ Error processing document: {str(e)}")
 
     with col2:
-        st.subheader("❓ Query Analysis")
+        st.markdown("### ❓ Query Analysis")
         
         if not st.session_state.processed_documents:
-            st.info("👈 Please upload a document first to enable query analysis")
+            st.markdown('''
+            <div class="query-section" style="text-align: center;">
+                <h4>📋 Ready to analyze</h4>
+                <p>Upload a document first to start asking questions</p>
+                <p><em>👈 Use the upload area on the left</em></p>
+            </div>
+            ''', unsafe_allow_html=True)
         elif not api_key:
-            st.info("👈 Please enter your OpenAI API key in the sidebar")
+            st.markdown('''
+            <div class="query-section" style="text-align: center;">
+                <h4>🔑 API Key Required</h4>
+                <p>Enter your OpenAI API key in the sidebar to enable AI analysis</p>
+            </div>
+            ''', unsafe_allow_html=True)
         else:
-            # Query input
+            st.markdown('<div class="query-section">', unsafe_allow_html=True)
+            
+            # Sample queries for better UX
+            st.markdown("**💡 Try these example queries:**")
+            example_queries = [
+                "46M, knee surgery in Pune, 3-month policy",
+                "35-year-old female, heart surgery in Mumbai, 1-year insurance",
+                "Male patient, dental treatment, Bangalore, 6-month coverage"
+            ]
+            
+            selected_example = st.selectbox("Choose an example:", [""] + example_queries, key="example_select")
+            
+            # Query input with better styling
             user_query = st.text_area(
-                "Enter your query",
+                "Enter your natural language query:",
                 height=100,
-                placeholder="e.g., 46-year-old male, knee surgery in Pune, 3-month-old insurance policy",
-                help="Enter a natural language query about the uploaded document"
+                value=selected_example if selected_example else "",
+                placeholder="Ask questions like: '46-year-old male, knee surgery in Pune, 3-month-old insurance policy'",
+                help="Describe the patient, procedure, location, and policy details in natural language"
             )
 
-            if st.button("🔍 Analyze Query", type="primary"):
+            # Analyze button with better styling
+            analyze_button = st.button(
+                "🤖 Analyze with AI", 
+                type="primary", 
+                use_container_width=True,
+                help="Click to get AI-powered analysis of your query"
+            )
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            if analyze_button:
                 if user_query.strip():
                     try:
                         start_time = time.time()
@@ -214,112 +364,167 @@ def main():
                                 except Exception as db_error:
                                     st.warning(f"Database save failed: {str(db_error)}")
 
-                        # Display results
-                        st.subheader("📋 Analysis Results")
+                        # Enhanced results display
+                        st.markdown('<div class="results-section">', unsafe_allow_html=True)
+                        st.markdown("## 📋 Analysis Results")
                         
-                        # Show parsed query details
+                        # Decision card with prominent styling
+                        decision = analysis_result.get('decision', 'Unknown')
+                        decision_icon = "✅" if decision.lower() == 'approved' else "❌"
+                        decision_color = "#28a745" if decision.lower() == 'approved' else "#dc3545"
+                        
+                        st.markdown(f'''
+                        <div style="background-color: {decision_color}; color: white; padding: 1.5rem; border-radius: 10px; text-align: center; margin: 1rem 0;">
+                            <h2 style="margin: 0; font-size: 2rem;">{decision_icon} {decision}</h2>
+                            {f'<p style="margin: 0.5rem 0 0 0; font-size: 1.2rem;">Amount: {analysis_result["amount"]}</p>' if analysis_result.get('amount') else ''}
+                        </div>
+                        ''', unsafe_allow_html=True)
+                        
+                        # Extracted details in a clean layout
                         with st.expander("🔍 Extracted Query Details", expanded=True):
-                            col_a, col_b = st.columns(2)
-                            with col_a:
-                                if parsed_query.get('age'):
-                                    st.write(f"**Age:** {parsed_query['age']}")
-                                if parsed_query.get('gender'):
-                                    st.write(f"**Gender:** {parsed_query['gender']}")
-                            with col_b:
-                                if parsed_query.get('procedure'):
-                                    st.write(f"**Procedure:** {parsed_query['procedure']}")
-                                if parsed_query.get('location'):
-                                    st.write(f"**Location:** {parsed_query['location']}")
-                                if parsed_query.get('policy_duration'):
-                                    st.write(f"**Policy Duration:** {parsed_query['policy_duration']}")
+                            if any(parsed_query.values()):
+                                col_a, col_b = st.columns(2)
+                                with col_a:
+                                    if parsed_query.get('age'):
+                                        st.markdown(f"**👤 Age:** {parsed_query['age']}")
+                                    if parsed_query.get('gender'):
+                                        st.markdown(f"**⚧ Gender:** {parsed_query['gender']}")
+                                with col_b:
+                                    if parsed_query.get('procedure'):
+                                        st.markdown(f"**🏥 Procedure:** {parsed_query['procedure']}")
+                                    if parsed_query.get('location'):
+                                        st.markdown(f"**📍 Location:** {parsed_query['location']}")
+                                    if parsed_query.get('policy_duration'):
+                                        st.markdown(f"**📅 Policy Duration:** {parsed_query['policy_duration']}")
+                            else:
+                                st.info("No specific details extracted from query")
 
-                        # Show AI decision
-                        decision_color = "green" if analysis_result.get('decision', '').lower() == 'approved' else "red"
-                        st.markdown(f"### Decision: :{decision_color}[{analysis_result.get('decision', 'Unknown')}]")
-                        
-                        if analysis_result.get('amount'):
-                            st.write(f"**Amount:** {analysis_result['amount']}")
-                        
-                        st.write(f"**Justification:** {analysis_result.get('justification', 'No justification provided')}")
+                        # Justification and confidence
+                        col_just, col_conf = st.columns([3, 1])
+                        with col_just:
+                            st.markdown("**📝 Justification:**")
+                            st.write(analysis_result.get('justification', 'No justification provided'))
+                        with col_conf:
+                            confidence = analysis_result.get('confidence', 'Medium')
+                            conf_color = {"High": "🟢", "Medium": "🟡", "Low": "🔴"}.get(confidence, "🟡")
+                            st.metric("Confidence", f"{conf_color} {confidence}")
                         
                         if analysis_result.get('clause_reference'):
-                            st.write(f"**Clause Reference:** {analysis_result['clause_reference']}")
+                            st.markdown("**📚 Clause Reference:**")
+                            st.info(analysis_result['clause_reference'])
 
-                        # Show relevant document sections
-                        with st.expander("📄 Relevant Document Sections"):
+                        # Relevant sections with better formatting
+                        with st.expander("📄 Supporting Document Sections", expanded=False):
                             for i, chunk in enumerate(relevant_chunks, 1):
-                                st.write(f"**Section {i}:**")
-                                st.write(chunk[:500] + "..." if len(chunk) > 500 else chunk)
-                                st.divider()
+                                st.markdown(f"**📖 Section {i}:**")
+                                preview = chunk[:400] + "..." if len(chunk) > 400 else chunk
+                                st.markdown(f'<div style="background-color: #f8f9fa; padding: 1rem; border-radius: 5px; border-left: 4px solid #007bff;">{preview}</div>', unsafe_allow_html=True)
+                                if i < len(relevant_chunks):
+                                    st.markdown("---")
 
-                        # Show raw JSON response
-                        with st.expander("🔧 Raw JSON Response"):
+                        # Technical details (collapsed by default)
+                        with st.expander("🔧 Technical Details", expanded=False):
                             st.json(analysis_result)
+                        
+                        st.markdown('</div>', unsafe_allow_html=True)
 
                     except Exception as e:
                         st.error(f"❌ Error analyzing query: {str(e)}")
                 else:
                     st.warning("⚠️ Please enter a query to analyze")
 
-    # Analytics and History Section
+    # Enhanced Analytics and History Section
     st.markdown("---")
-    col_analytics, col_history = st.columns([1, 1])
+    st.markdown("## 📊 System Dashboard")
     
-    with col_analytics:
-        st.subheader("📊 Analytics")
-        if db:
-            try:
-                analytics = db.get_analytics()
-                col_a1, col_a2, col_a3 = st.columns(3)
+    if db:
+        try:
+            analytics = db.get_analytics()
+            
+            # Analytics cards with attractive design
+            col_a1, col_a2, col_a3, col_a4 = st.columns(4)
+            
+            with col_a1:
+                st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+                st.metric("📄 Documents", analytics['total_documents'])
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col_a2:
+                st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+                st.metric("💬 Queries", analytics['total_queries'])
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col_a3:
+                st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+                approval_rate = analytics['approval_rate']
+                st.metric("✅ Approval Rate", f"{approval_rate:.1f}%")
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col_a4:
+                st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+                st.metric("⚡ Avg Time", f"{analytics['average_processing_time']:.1f}s")
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # Decision breakdown
+            col_analytics, col_history = st.columns([1, 1], gap="large")
+            
+            with col_analytics:
+                st.markdown("### 📈 Decision Breakdown")
                 
-                with col_a1:
-                    st.metric("Total Documents", analytics['total_documents'])
-                    st.metric("Total Queries", analytics['total_queries'])
+                approved = analytics['approved_decisions']
+                rejected = analytics['rejected_decisions']
                 
-                with col_a2:
-                    st.metric("Approved", analytics['approved_decisions'])
-                    st.metric("Rejected", analytics['rejected_decisions'])
-                
-                with col_a3:
-                    st.metric("Approval Rate", f"{analytics['approval_rate']:.1f}%")
-                    st.metric("Avg Processing", f"{analytics['average_processing_time']:.2f}s")
-                    
-            except Exception as e:
-                st.error(f"Error loading analytics: {str(e)}")
-        else:
-            st.info("Database analytics not available")
-    
-    with col_history:
-        st.subheader("📝 Recent Queries")
-        if db:
-            try:
-                history = db.get_query_history(limit=10)
-                if history:
-                    for record in history:
-                        with st.expander(f"Query: {record['query'][:50]}..."):
-                            st.write(f"**Decision:** {record['decision']}")
-                            if record['amount']:
-                                st.write(f"**Amount:** {record['amount']}")
-                            st.write(f"**Confidence:** {record['confidence']}")
-                            st.write(f"**Document:** {record['document']}")
-                            st.write(f"**Time:** {record['timestamp']}")
+                if approved + rejected > 0:
+                    col_appr, col_rej = st.columns(2)
+                    with col_appr:
+                        st.markdown(f'''
+                        <div style="background-color: #d4edda; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <h3 style="margin: 0; color: #155724;">✅ {approved}</h3>
+                            <p style="margin: 0; color: #155724;">Approved</p>
+                        </div>
+                        ''', unsafe_allow_html=True)
+                    with col_rej:
+                        st.markdown(f'''
+                        <div style="background-color: #f8d7da; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <h3 style="margin: 0; color: #721c24;">❌ {rejected}</h3>
+                            <p style="margin: 0; color: #721c24;">Rejected</p>
+                        </div>
+                        ''', unsafe_allow_html=True)
                 else:
-                    st.info("No query history available yet.")
-            except Exception as e:
-                st.error(f"Error loading history: {str(e)}")
-        else:
-            st.info("Database history not available")
+                    st.info("No decisions recorded yet")
+            
+            with col_history:
+                st.markdown("### 📝 Recent Activity")
+                history = db.get_query_history(limit=5)
+                if history:
+                    for i, record in enumerate(history):
+                        decision_icon = "✅" if record['decision'] == 'Approved' else "❌"
+                        time_str = record['timestamp'][:16].replace('T', ' ')
+                        
+                        st.markdown(f'''
+                        <div style="background-color: white; padding: 0.8rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 4px solid {'#28a745' if record['decision'] == 'Approved' else '#dc3545'};">
+                            <div style="display: flex; justify-content: between; align-items: center;">
+                                <strong>{decision_icon} {record['query'][:40]}...</strong>
+                            </div>
+                            <small style="color: #6c757d;">📄 {record['document'][:20]}... • 🕒 {time_str}</small>
+                        </div>
+                        ''', unsafe_allow_html=True)
+                else:
+                    st.info("No query history available yet")
+                    
+        except Exception as e:
+            st.error(f"Error loading dashboard data: {str(e)}")
+    else:
+        st.markdown('''
+        <div style="background-color: #fff3cd; padding: 2rem; border-radius: 10px; text-align: center;">
+            <h3>📊 Dashboard Unavailable</h3>
+            <p>Database connection required for analytics and history features</p>
+        </div>
+        ''', unsafe_allow_html=True)
 
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    **Instructions:**
-    1. Upload a PDF document (policy, contract, etc.)
-    2. Enter your OpenAI API key in the sidebar
-    3. Type a natural language query about the document
-    4. Get intelligent analysis with decisions and justifications
-    5. View analytics and query history below
-    """)
+
 
 if __name__ == "__main__":
     main()

@@ -4,7 +4,7 @@
 
 This is a Streamlit-based Python web application that processes PDF documents (primarily insurance policies) and provides intelligent decision-making through AI analysis. The system combines document processing, semantic search, and OpenAI's GPT-4o model to analyze user queries against uploaded documents and provide structured decisions.
 
-**Latest Update (July 24, 2025)**: Enhanced the system with multi-format document support (PDF, Word, Email), professional UI/UX design with gradient styling and intuitive user experience. Added multi-tier search capabilities with semantic search fallbacks and comprehensive database integration for audit trails.
+**Latest Update (July 24, 2025)**: Added local AI support eliminating the need for external API keys. Enhanced the system with multi-format document support (PDF, Word, Email), professional UI/UX design with gradient styling and intuitive user experience. Users can now choose between local AI processing (no API key needed) or OpenAI for advanced analysis.
 
 ## User Preferences
 
@@ -55,13 +55,24 @@ The system is designed to run entirely in Replit without external dependencies b
   - Fallback option when ML dependencies unavailable
 - **Design Decision**: Multi-tier fallback ensures system works in all environments while providing best available search quality
 
-### 4. OpenAI Client (`openai_client.py`)
-- **Purpose**: Handles AI-powered analysis and decision making
+### 4. AI Analysis Clients
+#### OpenAI Client (`openai_client.py`)
+- **Purpose**: Handles AI-powered analysis using OpenAI models
 - **Key Features**:
   - Integration with OpenAI GPT-3.5-turbo
   - Structured JSON response format
   - Context-aware prompting with document chunks
 - **Design Decision**: Uses GPT-3.5-turbo for cost-effectiveness while maintaining quality
+
+#### Local AI Client (`local_ai_client.py`)
+- **Purpose**: Provides AI analysis without external API dependencies
+- **Key Features**:
+  - Rule-based decision analysis with NLP enhancement
+  - Optional transformer models for sentiment analysis
+  - Automatic fallback to basic analysis if models unavailable
+  - Age, procedure, location, and policy duration analysis
+  - Context-aware justification generation
+- **Design Decision**: Combines rule-based logic with optional ML models for robust offline analysis
 
 ### 5. Database Manager (`database_manager.py`)
 - **Purpose**: Manages persistent storage and audit trail

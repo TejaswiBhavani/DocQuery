@@ -6,6 +6,7 @@ import time
 from document_processor import DocumentProcessor
 from query_parser import QueryParser
 from openai_client import OpenAIClient
+from local_ai_client import LocalAIClient
 from database_manager import DatabaseManager
 
 # Try to import advanced vector search, fallback to simpler alternatives
@@ -153,19 +154,45 @@ def main():
         st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
         st.markdown("### ⚙️ Configuration")
         
-        # OpenAI API Key input with better styling
-        api_key = st.text_input(
-            "OpenAI API Key",
-            type="password",
-            help="Enter your OpenAI API key to enable AI analysis",
-            placeholder="sk-proj-..."
+        # AI Model Selection
+        st.markdown("**AI Analysis Method:**")
+        use_local_ai = st.radio(
+            "Choose AI method:",
+            ["Local AI (No API key needed)", "OpenAI GPT (Requires API key)"],
+            help="Local AI uses open-source models, OpenAI provides more advanced analysis"
         )
         
-        if api_key:
-            os.environ["OPENAI_API_KEY"] = api_key
-            st.markdown('<div class="success-card">✅ API Key configured successfully</div>', unsafe_allow_html=True)
+        api_key = None
+        if use_local_ai == "OpenAI GPT (Requires API key)":
+            api_key = st.text_input(
+                "OpenAI API Key",
+                type="password",
+                help="Enter your OpenAI API key for advanced AI analysis",
+                placeholder="sk-proj-..."
+            )
+            
+            if api_key:
+                os.environ["OPENAI_API_KEY"] = api_key
+                st.markdown('<div class="success-card">✅ OpenAI API Key configured</div>', unsafe_allow_html=True)
+            else:
+                st.markdown('<div class="warning-card">⚠️ Please enter your OpenAI API key</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="warning-card">⚠️ Please enter your OpenAI API key to continue</div>', unsafe_allow_html=True)
+            # Initialize local AI
+            local_ai = LocalAIClient()
+            capabilities = local_ai.get_capabilities()
+            
+            st.markdown('<div class="success-card">✅ Local AI ready (No API key needed)</div>', unsafe_allow_html=True)
+            
+            # Show capabilities
+            with st.expander("Local AI Capabilities", expanded=False):
+                st.write("**Available Features:**")
+                if capabilities["transformers_models"]:
+                    st.write("• 🤖 Transformer models for sentiment analysis")
+                if capabilities["spacy_nlp"]:
+                    st.write("• 📝 Advanced NLP processing")
+                st.write("• 🔍 Rule-based decision analysis")
+                st.write("• 📊 Statistical text analysis")
+                st.write("• 🎯 Context-aware processing")
         
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -197,6 +224,13 @@ def main():
             st.markdown("**Database:** 🟢 Connected")
         else:
             st.markdown("**Database:** 🔴 Disconnected")
+        
+        # Show AI method status
+        if 'use_local_ai' in locals():
+            if use_local_ai == "Local AI (No API key needed)":
+                st.markdown("**AI Method:** 🤖 Local AI")
+            else:
+                st.markdown("**AI Method:** 🌐 OpenAI GPT")
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Main content area with improved layout
@@ -303,11 +337,11 @@ def main():
                 <p><em>👈 Use the upload area on the left</em></p>
             </div>
             ''', unsafe_allow_html=True)
-        elif not api_key:
+        elif use_local_ai == "OpenAI GPT (Requires API key)" and not api_key:
             st.markdown('''
             <div class="query-section" style="text-align: center;">
                 <h4>🔑 API Key Required</h4>
-                <p>Enter your OpenAI API key in the sidebar to enable AI analysis</p>
+                <p>Enter your OpenAI API key in the sidebar or switch to Local AI</p>
             </div>
             ''', unsafe_allow_html=True)
         else:
@@ -354,13 +388,21 @@ def main():
                             # Search for relevant chunks
                             relevant_chunks = st.session_state.vector_search.search(user_query, k=3)
 
-                            # Get AI analysis
-                            openai_client = OpenAIClient()
-                            analysis_result = openai_client.analyze_query(
-                                parsed_query, 
-                                relevant_chunks, 
-                                user_query
-                            )
+                            # Get AI analysis based on selected method
+                            if use_local_ai == "Local AI (No API key needed)":
+                                local_ai_client = LocalAIClient()
+                                analysis_result = local_ai_client.analyze_query(
+                                    parsed_query, 
+                                    relevant_chunks, 
+                                    user_query
+                                )
+                            else:
+                                openai_client = OpenAIClient()
+                                analysis_result = openai_client.analyze_query(
+                                    parsed_query, 
+                                    relevant_chunks, 
+                                    user_query
+                                )
                             
                             # Save query and analysis to database
                             if db and st.session_state.current_document_id:
@@ -381,7 +423,7 @@ def main():
                                         clause_reference=analysis_result.get('clause_reference', ''),
                                         confidence=analysis_result.get('confidence', 'Medium'),
                                         relevant_chunks=relevant_chunks,
-                                        ai_model="gpt-3.5-turbo",
+                                        ai_model=analysis_result.get('analysis_method', 'gpt-3.5-turbo'),
                                         processing_time=total_time
                                     )
                                 except Exception as db_error:

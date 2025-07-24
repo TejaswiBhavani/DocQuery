@@ -61,13 +61,23 @@ The system is designed to run entirely in Replit without external dependencies b
   - Context-aware prompting with document chunks
 - **Design Decision**: Uses GPT-3.5-turbo for cost-effectiveness while maintaining quality
 
-### 5. Main Application (`app.py`)
+### 5. Database Manager (`database_manager.py`)
+- **Purpose**: Manages persistent storage and audit trail
+- **Key Features**:
+  - Document upload tracking
+  - Query history storage
+  - Analysis results archiving
+  - Analytics and search functionality
+- **Design Decision**: Uses PostgreSQL for reliable audit trail and complex querying
+
+### 6. Main Application (`app.py`)
 - **Purpose**: Streamlit frontend and application orchestration
 - **Key Features**:
   - File upload interface
   - Query input and processing
-  - Results display
-  - Configuration management
+  - Results display with database integration
+  - Analytics dashboard
+  - Query history search
 
 ## Data Flow
 
@@ -86,16 +96,22 @@ The system is designed to run entirely in Replit without external dependencies b
 ### Required Libraries
 - `streamlit`: Web interface framework
 - `PyPDF2`: PDF text extraction
-- `sentence-transformers`: Text embedding generation
-- `faiss-cpu`: Vector similarity search
+- `sentence-transformers`: Text embedding generation (optional)
+- `faiss-cpu`: Vector similarity search (optional)
+- `scikit-learn`: TF-IDF semantic search
 - `openai`: AI analysis integration
 - `numpy`: Numerical operations
+- `psycopg2-binary`: PostgreSQL database connectivity
+- `sqlalchemy`: Database ORM
 
 ### External Services
 - **OpenAI API**: Required for intelligent decision making
   - Model: GPT-3.5-turbo
   - Authentication: User-provided API key
   - Response format: Structured JSON
+- **PostgreSQL Database**: Stores analysis history and audit trail
+  - Tables: documents, queries, analysis_results
+  - Features: Analytics, search, audit tracking
 
 ## Deployment Strategy
 

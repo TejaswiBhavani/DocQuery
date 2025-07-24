@@ -30,101 +30,20 @@ st.set_page_config(
 )
 
 def main():
-    # Custom CSS for better styling
-    st.markdown("""
-    <style>
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 3rem 2rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-        color: white;
-        text-align: center;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-    }
-    .main-header h1 {
-        margin: 0;
-        font-size: 2.5rem;
-        font-weight: 600;
-    }
-    .main-header p {
-        margin: 0.5rem 0 0 0;
-        font-size: 1.1rem;
-        opacity: 0.9;
-    }
-    .upload-section {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border: 2px dashed #007bff;
-        border-radius: 15px;
-        padding: 2rem;
-        text-align: center;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-    }
-    .upload-section:hover {
-        border-color: #0056b3;
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,123,255,0.15);
-    }
-    .query-section {
-        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-        border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 2rem;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-    }
-    .query-section:hover {
-        box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-        transform: translateY(-1px);
-    }
-    .results-section {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-top: 1rem;
-    }
-    .metric-card {
-        background-color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    .success-card {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        border-radius: 8px;
-        padding: 1rem;
-        color: #155724;
-    }
-    .warning-card {
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 8px;
-        padding: 1rem;
-        color: #856404;
-    }
-    .sidebar-section {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Load custom CSS
+    with open('style.css') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     
     # Modern header with enhanced styling
     st.markdown("""
-    <div class="main-header">
-        <h1>🤖 AI Document Analysis System</h1>
-        <p>Upload any document (PDF, Word, Email) and ask natural language questions for intelligent AI-powered decisions</p>
-        <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.9rem; opacity: 0.9;">
-            <span>📄 Multi-format Support</span>
-            <span>🧠 AI-powered Analysis</span>
-            <span>⚡ Real-time Processing</span>
-            <span>📊 Audit Trail</span>
+    <div class="app-header">
+        <h1 class="app-title">🤖 AI Document Analysis System</h1>
+        <p class="app-subtitle">Upload any document (PDF, Word, Email) and ask natural language questions for intelligent AI-powered decisions</p>
+        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.9rem; opacity: 0.95;">
+            <span class="float-animation">📄 Multi-format Support</span>
+            <span class="float-animation" style="animation-delay: 0.5s;">🧠 AI-powered Analysis</span>
+            <span class="float-animation" style="animation-delay: 1s;">⚡ Real-time Processing</span>
+            <span class="float-animation" style="animation-delay: 1.5s;">📊 Audit Trail</span>
         </div>
     </div>
     """, unsafe_allow_html=True)

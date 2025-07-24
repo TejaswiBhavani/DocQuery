@@ -1,0 +1,536 @@
+/* Modern AI Document Analysis System - Advanced UI */
+
+/* CSS Variables for consistent theming */
+:root {
+    --primary: #667eea;
+    --primary-dark: #5a67d8;
+    --secondary: #764ba2;
+    --accent: #10b981;
+    --accent-hover: #059669;
+    --background: #0E1117;
+    --surface: #1E2328;
+    --surface-light: #2D3748;
+    --text: #FAFAFA;
+    --text-muted: #CBD5E0;
+    --border: rgba(255, 255, 255, 0.1);
+    --shadow: rgba(0, 0, 0, 0.3);
+    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-accent: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --gradient-danger: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+    --gradient-warning: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
+/* Global styles */
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Hide Streamlit branding */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Main container with advanced background */
+.main {
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #0E1117 0%, #1A1D23 100%);
+    min-height: 100vh;
+    padding: 0;
+}
+
+/* Custom App Header */
+.app-header {
+    background: var(--gradient-primary);
+    padding: 1.5rem 2rem;
+    margin: -1rem -1rem 2rem -1rem;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.app-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+    opacity: 0.3;
+    animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(10px, 10px); }
+}
+
+.app-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.app-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0.5rem 0 0 0;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+}
+
+/* Sidebar styling with glassmorphism */
+.css-1d391kg {
+    background: 
+        radial-gradient(circle at 50% 0%, rgba(102, 126, 234, 0.1) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(30, 35, 40, 0.95) 0%, rgba(14, 17, 23, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border);
+}
+
+.sidebar-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--gradient-primary);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.sidebar-section:hover::before {
+    transform: scaleX(1);
+}
+
+.sidebar-section:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced metric cards */
+[data-testid="metric-container"] {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+[data-testid="metric-container"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+[data-testid="metric-container"]:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+[data-testid="metric-container"]:hover::before {
+    opacity: 0.1;
+}
+
+[data-testid="metric-container"] [data-testid="metric-value"] {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: var(--text) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-testid="metric-container"] [data-testid="metric-delta"] {
+    font-weight: 600 !important;
+}
+
+/* Modern buttons with advanced hover effects */
+.stButton > button {
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 2rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.stButton > button:hover::before {
+    left: 100%;
+}
+
+.stButton > button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.5);
+    background: linear-gradient(135deg, #5a67d8 0%, #6b5bb1 100%);
+}
+
+.stButton > button:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* File uploader with modern styling */
+[data-testid="stFileUploader"] {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 2px dashed rgba(102, 126, 234, 0.4);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: rgba(102, 126, 234, 0.8);
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+}
+
+[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {
+    border: none;
+    background: transparent;
+}
+
+/* Text input fields */
+.stTextInput > div > div > input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: var(--text);
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.stTextArea > div > div > textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: var(--text);
+    padding: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    resize: vertical;
+}
+
+.stTextArea > div > div > textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Radio buttons */
+.stRadio > div {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Select boxes */
+.stSelectbox > div > div {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+/* Custom notification cards */
+.success-card {
+    background: var(--gradient-accent);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    animation: slideInUp 0.3s ease;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.warning-card {
+    background: var(--gradient-warning);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+    animation: slideInUp 0.3s ease;
+    border: 1px solid rgba(237, 137, 54, 0.3);
+}
+
+.error-card {
+    background: var(--gradient-danger);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(245, 101, 101, 0.3);
+    animation: slideInUp 0.3s ease;
+    border: 1px solid rgba(245, 101, 101, 0.3);
+}
+
+/* Decision result cards */
+.decision-approved {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(5, 150, 105, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 16px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+    animation: resultFadeIn 0.5s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.decision-rejected {
+    background: linear-gradient(135deg, rgba(245, 101, 101, 0.9) 0%, rgba(229, 62, 62, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(245, 101, 101, 0.3);
+    border-radius: 16px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 8px 32px rgba(245, 101, 101, 0.3);
+    animation: resultFadeIn 0.5s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.decision-review {
+    background: linear-gradient(135deg, rgba(237, 137, 54, 0.9) 0%, rgba(221, 107, 32, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(237, 137, 54, 0.3);
+    border-radius: 16px;
+    padding: 2rem;
+    color: white;
+    box-shadow: 0 8px 32px rgba(237, 137, 54, 0.3);
+    animation: resultFadeIn 0.5s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Result card shimmer effect */
+.decision-approved::before,
+.decision-rejected::before,
+.decision-review::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 2s infinite;
+}
+
+/* Query section styling */
+.query-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.query-section:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+/* Progress indicators */
+.stProgress > div > div > div > div {
+    background: var(--gradient-primary);
+    border-radius: 10px;
+}
+
+/* Expander styling */
+.streamlit-expanderHeader {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+/* Charts and plots */
+.stPlotlyChart {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}
+
+/* Animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes resultFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Floating animation for icons */
+.float-animation {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gradient-primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .app-title {
+        font-size: 2rem;
+    }
+    
+    .app-subtitle {
+        font-size: 1rem;
+    }
+    
+    .sidebar-section {
+        padding: 1rem;
+    }
+    
+    [data-testid="metric-container"] {
+        padding: 1rem;
+    }
+}
+
+/* Dark mode specific adjustments */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --border: rgba(255, 255, 255, 0.15);
+        --shadow: rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .sidebar-section,
+    [data-testid="metric-container"],
+    .query-section {
+        border-width: 2px;
+        border-color: var(--primary);
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

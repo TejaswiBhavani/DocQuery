@@ -4,7 +4,7 @@
 
 This is a Streamlit-based Python web application that processes PDF documents (primarily insurance policies) and provides intelligent decision-making through AI analysis. The system combines document processing, semantic search, and OpenAI's GPT-4o model to analyze user queries against uploaded documents and provide structured decisions.
 
-**Latest Update (July 24, 2025)**: Enhanced the system with multi-tier search capabilities - advanced semantic search with sentence transformers, enhanced TF-IDF semantic search, and simple text-based search as fallbacks. The system now provides better semantic understanding and document analysis.
+**Latest Update (July 24, 2025)**: Enhanced the system with multi-format document support (PDF, Word, Email), professional UI/UX design with gradient styling and intuitive user experience. Added multi-tier search capabilities with semantic search fallbacks and comprehensive database integration for audit trails.
 
 ## User Preferences
 
@@ -25,12 +25,14 @@ The system is designed to run entirely in Replit without external dependencies b
 ## Key Components
 
 ### 1. Document Processor (`document_processor.py`)
-- **Purpose**: Extracts and processes text from PDF files
+- **Purpose**: Extracts and processes text from multiple document formats
 - **Key Features**: 
-  - PDF text extraction using PyPDF2
-  - Text cleaning and chunking
-  - Error handling for encrypted or corrupted PDFs
-- **Design Decision**: Uses PyPDF2 for broad compatibility and simplicity
+  - Multi-format support: PDF, Word (.docx), Email (.eml), Text (.txt)
+  - Automatic file type detection based on extensions
+  - Text cleaning and chunking for all formats
+  - Email metadata extraction (subject, sender, recipient, date)
+  - Error handling for encrypted, corrupted, or unsupported files
+- **Design Decision**: Extensible architecture with format-specific processors and graceful fallbacks
 
 ### 2. Query Parser (`query_parser.py`)
 - **Purpose**: Extracts structured information from natural language queries

@@ -33,12 +33,13 @@ def main():
     st.markdown("""
     <style>
     .main-header {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 3rem 2rem;
+        border-radius: 15px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
     }
     .main-header h1 {
         margin: 0;
@@ -51,19 +52,31 @@ def main():
         opacity: 0.9;
     }
     .upload-section {
-        background-color: #f8f9fa;
-        border: 2px dashed #e9ecef;
-        border-radius: 10px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px dashed #007bff;
+        border-radius: 15px;
         padding: 2rem;
         text-align: center;
         margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    .upload-section:hover {
+        border-color: #0056b3;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.15);
     }
     .query-section {
-        background-color: #fff;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
         border: 1px solid #e9ecef;
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 2rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    .query-section:hover {
+        box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+        transform: translateY(-1px);
     }
     .results-section {
         background-color: #f8f9fa;
@@ -101,11 +114,17 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Modern header
+    # Modern header with enhanced styling
     st.markdown("""
     <div class="main-header">
         <h1>🤖 AI Document Analysis System</h1>
-        <p>Upload documents and ask natural language questions to get intelligent decisions based on semantic analysis</p>
+        <p>Upload any document (PDF, Word, Email) and ask natural language questions for intelligent AI-powered decisions</p>
+        <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.9rem; opacity: 0.9;">
+            <span>📄 Multi-format Support</span>
+            <span>🧠 AI-powered Analysis</span>
+            <span>⚡ Real-time Processing</span>
+            <span>📊 Audit Trail</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -189,18 +208,21 @@ def main():
         # Custom upload area
         st.markdown('<div class="upload-section">', unsafe_allow_html=True)
         uploaded_file = st.file_uploader(
-            "Choose a PDF document",
-            type=['pdf'],
-            help="Upload insurance policies, contracts, legal documents, or any PDF for AI analysis",
+            "Choose your document",
+            type=['pdf', 'docx', 'doc', 'txt', 'eml'],
+            help="Upload PDFs, Word documents, emails, or text files for AI analysis",
             label_visibility="collapsed"
         )
         
         if not uploaded_file:
             st.markdown("""
             <div style="text-align: center; padding: 2rem;">
-                <h4>📄 Drop your PDF here</h4>
-                <p>Supported formats: PDF files up to 200MB</p>
-                <p><em>Insurance policies • Contracts • Legal documents • Emails</em></p>
+                <h4>📄 Drop your document here</h4>
+                <p>Supported formats: PDF • Word (.docx) • Email (.eml) • Text (.txt)</p>
+                <p><em>Insurance policies • Contracts • Legal documents • Emails • Reports</em></p>
+                <div style="margin-top: 1rem; color: #6c757d;">
+                    <small>📁 Maximum file size: 200MB</small>
+                </div>
             </div>
             """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -209,8 +231,9 @@ def main():
             try:
                 start_time = time.time()
                 with st.spinner("Processing document..."):
-                    # Save uploaded file temporarily
-                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                    # Save uploaded file temporarily with proper extension
+                    file_extension = os.path.splitext(uploaded_file.name)[1]
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
                         tmp_file.write(uploaded_file.getvalue())
                         tmp_file_path = tmp_file.name
 

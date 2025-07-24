@@ -1,23 +1,57 @@
 import PyPDF2
 import re
+import email
+import os
 from typing import List, Optional
+try:
+    from docx import Document
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+    
+try:
+    import magic
+    MAGIC_AVAILABLE = True
+except ImportError:
+    MAGIC_AVAILABLE = False
 
 class DocumentProcessor:
-    """Handles PDF text extraction and text chunking operations."""
+    """Handles document processing and text extraction for multiple formats."""
     
-    def extract_text(self, pdf_path: str) -> str:
-        """
-        Extract text from a PDF file.
+    def detect_file_type(self, file_path: str) -> str:
+        """Detect file type based on content and extension."""
+        # Fallback to extension-based detection
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext == '.pdf':
+            return 'pdf'
+        elif ext in ['.docx', '.doc']:
+            return 'docx'
+        elif ext in ['.eml', '.msg', '.txt']:
+            return 'email'
+        else:
+            return 'unknown'
+    
+    def extract_text(self, file_path: str) -> str:
+        """Extract text content from various document formats."""
+        file_type = self.detect_file_type(file_path)
         
-        Args:
-            pdf_path: Path to the PDF file
-            
-        Returns:
-            Extracted text content
-            
-        Raises:
-            Exception: If PDF cannot be read or processed
-        """
+        try:
+            if file_type == 'pdf':
+                return self._extract_pdf_text(file_path)
+            elif file_type == 'docx':
+                return self._extract_docx_text(file_path)
+            elif file_type == 'email':
+                return self._extract_email_text(file_path)
+            else:
+                # Try to read as plain text
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
+                    return self._clean_text(file.read())
+                    
+        except Exception as e:
+            raise Exception(f"Error extracting text from {file_type} file: {str(e)}")
+    
+    def _extract_pdf_text(self, pdf_path: str) -> str:
+        """Extract text content from a PDF file."""
         try:
             text_content = ""
             
@@ -44,6 +78,80 @@ class DocumentProcessor:
             raise Exception(f"Error reading PDF file: {str(e)}")
         except Exception as e:
             raise Exception(f"Error extracting text from PDF: {str(e)}")
+    
+    def _extract_docx_text(self, docx_path: str) -> str:
+        """Extract text content from a Word document."""
+        if not DOCX_AVAILABLE:
+            raise Exception("Word document processing not available. Please install python-docx.")
+        
+        try:
+            doc = Document(docx_path)
+            text = ""
+            
+            # Extract text from paragraphs
+            for paragraph in doc.paragraphs:
+                text += paragraph.text + "\n"
+            
+            # Extract text from tables
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        text += cell.text + " "
+                    text += "\n"
+            
+            return self._clean_text(text)
+            
+        except Exception as e:
+            raise Exception(f"Error extracting text from Word document: {str(e)}")
+    
+    def _extract_email_text(self, email_path: str) -> str:
+        """Extract text content from an email file."""
+        try:
+            with open(email_path, 'r', encoding='utf-8', errors='ignore') as file:
+                content = file.read()
+            
+            # Try to parse as email
+            try:
+                msg = email.message_from_string(content)
+                
+                # Extract email metadata
+                subject = msg.get('Subject', '')
+                sender = msg.get('From', '')
+                recipient = msg.get('To', '')
+                date = msg.get('Date', '')
+                
+                # Extract body
+                body = ""
+                if msg.is_multipart():
+                    for part in msg.walk():
+                        if part.get_content_type() == "text/plain":
+                            payload = part.get_payload(decode=True)
+                            if payload:
+                                body += payload.decode('utf-8', errors='ignore')
+                else:
+                    payload = msg.get_payload(decode=True)
+                    if payload:
+                        body = payload.decode('utf-8', errors='ignore')
+                    else:
+                        body = str(msg.get_payload())
+                
+                # Combine all content
+                email_text = f"""Subject: {subject}
+From: {sender}
+To: {recipient}
+Date: {date}
+
+Body:
+{body}"""
+                
+                return self._clean_text(email_text)
+                
+            except Exception:
+                # If email parsing fails, return as plain text
+                return self._clean_text(content)
+                
+        except Exception as e:
+            raise Exception(f"Error extracting text from email: {str(e)}")
     
     def _clean_text(self, text: str) -> str:
         """

@@ -276,13 +276,24 @@ def main():
             
             selected_example = st.selectbox("Choose an example:", [""] + example_queries, key="example_select")
             
-            # Query input with better styling
+            # Enhanced query input with document icon header
+            st.markdown('''
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <h3 style="margin: 0; color: var(--text);">💬 Ask Your Question</h3>
+                <div class="document-icon-btn" style="margin-left: auto; font-size: 1.2rem;" title="Document Analysis Feature">
+                    📄
+                </div>
+            </div>
+            ''', unsafe_allow_html=True)
+            
+            # Enhanced text area with custom styling
             user_query = st.text_area(
                 "Enter your natural language query:",
-                height=100,
+                height=120,
                 value=selected_example if selected_example else "",
-                placeholder="Ask questions like: '46-year-old male, knee surgery in Pune, 3-month-old insurance policy'",
-                help="Describe the patient, procedure, location, and policy details in natural language"
+                placeholder="Ask questions like: '46-year-old male, knee surgery in Pune, 3-month-old policy' ✨",
+                help="📋 Describe the patient, procedure, location, and policy details in natural language",
+                label_visibility="collapsed"
             )
 
             # Analyze button with better styling

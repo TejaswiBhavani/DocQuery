@@ -31,18 +31,38 @@ class EnhancedVectorSearch:
         self.processed_chunks = [self._preprocess_text(chunk) for chunk in document_chunks]
         
         # Create TF-IDF vectorizer with enhanced features
+        # Adjust parameters based on document collection size
+        num_docs = len(self.processed_chunks)
+        max_df = min(0.95, max(0.1, num_docs - 1)) if num_docs > 1 else 1.0
+        min_df = 1 if num_docs > 1 else 1
+        
         self.tfidf_vectorizer = TfidfVectorizer(
-            max_features=10000,
+            max_features=min(10000, num_docs * 100),
             stop_words='english',
-            ngram_range=(1, 3),  # Include unigrams, bigrams, and trigrams
-            min_df=1,
-            max_df=0.95,
+            ngram_range=(1, 2) if num_docs < 10 else (1, 3),
+            min_df=min_df,
+            max_df=max_df,
             lowercase=True,
             sublinear_tf=True
         )
         
-        # Fit and transform documents
-        self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(self.processed_chunks)
+        # Fit and transform documents with error handling
+        try:
+            self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(self.processed_chunks)
+        except ValueError as e:
+            # Fallback for very small document collections
+            if "max_df corresponds to" in str(e):
+                self.tfidf_vectorizer = TfidfVectorizer(
+                    max_features=min(1000, num_docs * 50),
+                    stop_words=None,  # Don't use stop words for small collections
+                    ngram_range=(1, 1),  # Only unigrams for very small collections
+                    min_df=1,
+                    max_df=1.0,
+                    lowercase=True
+                )
+                self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(self.processed_chunks)
+            else:
+                raise e
     
     def _preprocess_text(self, text: str) -> str:
         """

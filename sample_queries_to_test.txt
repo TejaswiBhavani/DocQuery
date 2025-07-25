@@ -1,0 +1,44 @@
+SAMPLE QUERIES TO TEST WITH THE INSURANCE POLICY:
+
+Here are some example questions you can ask after uploading the sample policy:
+
+1. BASIC COVERAGE QUESTIONS:
+   - "45-year-old male needs knee surgery in Mumbai"
+   - "What is covered for cardiac surgery for a 45-year-old?"
+   - "Maximum room rent covered per day?"
+
+2. AGE AND ELIGIBILITY:
+   - "Can a 70-year-old person renew this policy?"
+   - "What is the entry age limit for new policies?"
+   - "Coverage for 25-year-old dependent child?"
+
+3. SPECIFIC PROCEDURES:
+   - "Cataract surgery cost coverage"
+   - "Hip replacement surgery for 50-year-old male"
+   - "Emergency dental treatment after accident"
+
+4. PRE-EXISTING CONDITIONS:
+   - "45-year-old with diabetes for 3 years"
+   - "Heart patient with 2-year-old policy"
+   - "Cancer treatment coverage waiting period"
+
+5. GEOGRAPHICAL COVERAGE:
+   - "Emergency treatment in USA"
+   - "Surgery in Delhi for Mumbai resident"
+   - "Treatment in network hospital in Bangalore"
+
+6. MATERNITY AND FAMILY:
+   - "Normal delivery for 28-year-old female"
+   - "Cesarean delivery with 18-month policy"
+
+7. EXCLUSIONS AND LIMITATIONS:
+   - "Cosmetic surgery coverage"
+   - "Treatment for alcohol addiction"
+   - "Experimental cancer treatment"
+
+8. FINANCIAL ASPECTS:
+   - "Deductible amount for claims"
+   - "Co-payment for 65-year-old patient"
+   - "No-claim bonus after 2 claim-free years"
+
+These queries will help you test different aspects of the AI analysis system!

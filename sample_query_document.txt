@@ -1,0 +1,42 @@
+PATIENT COVERAGE INQUIRY
+
+Patient Information:
+- Name: Sarah Johnson
+- Age: 42 years old
+- Gender: Female
+- Location: Mumbai, Maharashtra
+
+Medical Requirements:
+1. Needs knee replacement surgery due to arthritis
+2. Estimated surgery cost: ₹1,80,000
+3. Requires hospitalization for 5-7 days
+4. Post-surgery physiotherapy for 3 months
+
+Insurance Policy Details:
+- Policy purchased 18 months ago
+- Current policy holder for 1.5 years
+- No previous claims made
+- Policy premium paid on time
+
+Questions for Analysis:
+1. Is knee replacement surgery covered under the current policy?
+2. What is the maximum coverage amount for orthopedic surgery?
+3. Are there any waiting periods that apply to this case?
+4. Will the hospitalization costs be covered?
+5. Is physiotherapy covered as post-treatment care?
+6. What documents need to be submitted for cashless treatment?
+7. Which network hospitals in Mumbai provide this service?
+
+Additional Considerations:
+- Patient prefers private room accommodation
+- Surgery scheduled for next month
+- Looking for cashless treatment option
+- Wants to understand deductible amounts
+
+Medical History:
+- No pre-existing major conditions
+- Arthritis developed 2 years ago
+- Currently on medication for joint pain
+- Regular follow-ups with orthopedic specialist
+
+Request: Please analyze this case against the insurance policy and provide approval/rejection decision with detailed justification.

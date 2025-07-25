@@ -276,25 +276,90 @@ def main():
             
             selected_example = st.selectbox("Choose an example:", [""] + example_queries, key="example_select")
             
-            # Enhanced query input with document icon header
-            st.markdown('''
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                <h3 style="margin: 0; color: var(--text);">💬 Ask Your Question</h3>
-                <div class="document-icon-btn" style="margin-left: auto; font-size: 1.2rem;" title="Document Analysis Feature">
-                    📄
-                </div>
-            </div>
-            ''', unsafe_allow_html=True)
+            # Enhanced query input with multiple options
+            st.markdown("### 💬 Ask Your Question")
             
-            # Enhanced text area with custom styling
-            user_query = st.text_area(
-                "Enter your natural language query:",
-                height=120,
-                value=selected_example if selected_example else "",
-                placeholder="Ask questions like: '46-year-old male, knee surgery in Pune, 3-month-old policy' ✨",
-                help="📋 Describe the patient, procedure, location, and policy details in natural language",
-                label_visibility="collapsed"
+            # Query input method selection
+            query_method = st.radio(
+                "Choose how to provide your query:",
+                ["💬 Text Input", "📄 Upload Query Document"],
+                horizontal=True,
+                help="Select whether to type your question or upload a document containing your query"
             )
+            
+            user_query = ""
+            
+            if query_method == "💬 Text Input":
+                # Enhanced text area with custom styling
+                user_query = st.text_area(
+                    "Enter your natural language query:",
+                    height=120,
+                    value=selected_example if selected_example else "",
+                    placeholder="Ask questions like: '46-year-old male, knee surgery in Pune, 3-month-old policy' ✨",
+                    help="📋 Describe the patient, procedure, location, and policy details in natural language",
+                    label_visibility="collapsed"
+                )
+                
+                # Quick query templates
+                st.markdown("**🚀 Quick Templates:**")
+                col_t1, col_t2, col_t3 = st.columns(3)
+                
+                with col_t1:
+                    if st.button("👤 Age + Procedure", help="Template for age and medical procedure"):
+                        user_query = "45-year-old patient needs surgery"
+                
+                with col_t2:
+                    if st.button("🏥 Location + Coverage", help="Template for location-based coverage"):
+                        user_query = "Treatment in Mumbai, covered under policy"
+                
+                with col_t3:
+                    if st.button("⏱️ Policy Duration", help="Template for policy timing questions"):
+                        user_query = "2-year-old insurance policy coverage"
+            
+            else:  # Document upload option
+                st.markdown('''
+                <div style="background: rgba(255, 255, 255, 0.9); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(102, 126, 234, 0.2); margin: 1rem 0;">
+                    <h4 style="margin: 0 0 1rem 0; color: var(--text);">📤 Upload Query Document</h4>
+                    <p style="margin: 0; color: var(--text-muted);">Upload a document containing your questions or requirements for analysis</p>
+                </div>
+                ''', unsafe_allow_html=True)
+                
+                query_file = st.file_uploader(
+                    "Upload a document with your query:",
+                    type=['txt', 'pdf', 'docx', 'eml'],
+                    help="Upload a document containing your questions about the main policy document",
+                    key="query_upload"
+                )
+                
+                if query_file is not None:
+                    try:
+                        # Process the query document
+                        temp_query_path = f"temp_query_{query_file.name}"
+                        with open(temp_query_path, "wb") as f:
+                            f.write(query_file.getbuffer())
+                        
+                        processor = DocumentProcessor()
+                        query_content = processor.extract_text(temp_query_path)
+                        
+                        # Clean up temporary file
+                        os.remove(temp_query_path)
+                        
+                        user_query = query_content.strip()
+                        
+                        st.success(f"✅ Query document processed: {len(user_query)} characters extracted")
+                        
+                        # Show extracted query in expandable section
+                        with st.expander("👀 Preview Extracted Query", expanded=False):
+                            st.text_area(
+                                "Extracted query content:",
+                                value=user_query[:1000] + ("..." if len(user_query) > 1000 else ""),
+                                height=100,
+                                disabled=True
+                            )
+                            
+                    except Exception as e:
+                        st.error(f"❌ Error processing query document: {str(e)}")
+                        user_query = ""
 
             # Analyze button with better styling
             analyze_button = st.button(

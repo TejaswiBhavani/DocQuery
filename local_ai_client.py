@@ -76,17 +76,30 @@ class LocalAIClient:
             # Combine relevant chunks for analysis
             combined_text = " ".join(relevant_chunks[:3])  # Use top 3 chunks
             
-            # Extract key information
-            decision_info = self._analyze_decision_context(combined_text, parsed_query, original_query)
+            # Determine domain-specific analysis approach
+            query_type = parsed_query.get('query_type', 'general_inquiry')
             
-            # Generate structured response
+            if query_type in ['coverage_inquiry', 'claim_submission']:
+                decision_info = self._analyze_insurance_coverage(combined_text, parsed_query, original_query)
+            elif query_type == 'legal_compliance':
+                decision_info = self._analyze_legal_compliance(combined_text, parsed_query, original_query)
+            elif query_type == 'hr_inquiry':
+                decision_info = self._analyze_hr_benefits(combined_text, parsed_query, original_query)
+            else:
+                decision_info = self._analyze_decision_context(combined_text, parsed_query, original_query)
+            
+            # Generate comprehensive structured response
             result = {
                 "decision": decision_info["decision"],
                 "justification": decision_info["justification"],
                 "confidence": decision_info["confidence"],
                 "amount": decision_info.get("amount"),
                 "clause_reference": decision_info.get("clause_reference"),
-                "analysis_method": "Local AI + Rule-based"
+                "analysis_method": "Enhanced Local AI + Domain Rules",
+                "query_type": query_type,
+                "risk_level": decision_info.get("risk_level", "Medium"),
+                "recommendations": decision_info.get("recommendations", []),
+                "next_steps": decision_info.get("next_steps", [])
             }
             
             return result
@@ -401,6 +414,329 @@ class LocalAIClient:
             "analysis_method": "Basic Rule-based"
         }
     
+    def _check_age_compliance(self, age: Optional[str], text: str) -> float:
+        """Check age compliance for insurance coverage."""
+        if not age:
+            return 0
+        
+        try:
+            age_num = int(re.search(r'\d+', age).group())
+            text_lower = text.lower()
+            
+            # Look for age-related restrictions
+            if "age" in text_lower:
+                # Extract age limits from text
+                age_limit_pattern = r'(?:minimum|maximum|min|max)\s*age[:\s]*(\d+)'
+                matches = re.findall(age_limit_pattern, text_lower)
+                
+                for limit_str in matches:
+                    limit = int(limit_str)
+                    if "minimum" in text_lower or "min" in text_lower:
+                        if age_num >= limit:
+                            return 2  # Meets minimum age
+                        else:
+                            return -2  # Below minimum age
+                    elif "maximum" in text_lower or "max" in text_lower:
+                        if age_num <= limit:
+                            return 2  # Within maximum age
+                        else:
+                            return -2  # Exceeds maximum age
+            
+            # Default age scoring (standard insurance age ranges)
+            if 18 <= age_num <= 65:
+                return 1  # Standard coverage age
+            elif 65 < age_num <= 75:
+                return 0  # Senior coverage may have restrictions
+            else:
+                return -1  # Outside typical coverage age
+                
+        except (ValueError, AttributeError):
+            return 0
+    
+    def _check_procedure_coverage(self, procedure: Optional[str], text: str) -> float:
+        """Check if medical procedure is covered."""
+        if not procedure:
+            return 0
+        
+        procedure_lower = procedure.lower()
+        text_lower = text.lower()
+        
+        # Check if procedure is explicitly mentioned
+        if procedure_lower in text_lower:
+            # Look for coverage context around procedure
+            proc_index = text_lower.find(procedure_lower)
+            context = text_lower[max(0, proc_index-100):proc_index+100]
+            
+            coverage_terms = ["covered", "included", "eligible", "benefit"]
+            exclusion_terms = ["excluded", "not covered", "denied", "restriction"]
+            
+            coverage_count = sum(term in context for term in coverage_terms)
+            exclusion_count = sum(term in context for term in exclusion_terms)
+            
+            if coverage_count > exclusion_count:
+                return 2
+            elif exclusion_count > coverage_count:
+                return -2
+            else:
+                return 0
+        
+        # Check for general procedure categories
+        procedure_categories = {
+            "surgery": ["surgical", "operation", "procedure"],
+            "emergency": ["emergency", "urgent", "critical"],
+            "diagnostic": ["diagnostic", "test", "scan", "examination"]
+        }
+        
+        for category, keywords in procedure_categories.items():
+            if any(keyword in procedure_lower for keyword in keywords):
+                if category in text_lower:
+                    return 1
+        
+        return 0
+    
+    def _check_geographic_coverage(self, location: Optional[str], text: str) -> float:
+        """Check geographic coverage for the specified location."""
+        if not location:
+            return 0
+        
+        location_lower = location.lower()
+        text_lower = text.lower()
+        
+        # Check if location is mentioned
+        if location_lower in text_lower:
+            # Look for network/coverage terms
+            network_terms = ["network", "covered area", "service area", "available"]
+            restriction_terms = ["restricted", "not available", "excluded area"]
+            
+            network_count = sum(term in text_lower for term in network_terms)
+            restriction_count = sum(term in text_lower for term in restriction_terms)
+            
+            if network_count > restriction_count:
+                return 2
+            elif restriction_count > network_count:
+                return -2
+        
+        # Default geographic coverage assumption
+        return 0
+    
+    def _check_policy_validity(self, duration: Optional[str], text: str) -> float:
+        """Check policy validity and waiting periods."""
+        if not duration:
+            return 0
+        
+        try:
+            duration_match = re.search(r'(\d+)\s*(month|year)', duration.lower())
+            if duration_match:
+                num = int(duration_match.group(1))
+                unit = duration_match.group(2)
+                months = num if unit == "month" else num * 12
+                
+                text_lower = text.lower()
+                
+                # Look for waiting periods
+                waiting_pattern = r'waiting\s*period[:\s]*(\d+)\s*(month|day)'
+                waiting_match = re.search(waiting_pattern, text_lower)
+                
+                if waiting_match:
+                    wait_num = int(waiting_match.group(1))
+                    wait_unit = waiting_match.group(2)
+                    wait_months = wait_num if wait_unit == "month" else wait_num / 30
+                    
+                    if months > wait_months:
+                        return 2  # Past waiting period
+                    else:
+                        return -2  # Still in waiting period
+                
+                # Policy age scoring
+                if months >= 12:
+                    return 1  # Mature policy
+                elif months >= 6:
+                    return 0  # Moderate policy age
+                else:
+                    return -1  # New policy
+                    
+        except (ValueError, AttributeError):
+            pass
+        
+        return 0
+    
+    def _check_pre_existing_conditions(self, condition: Optional[str], text: str) -> float:
+        """Check pre-existing condition coverage."""
+        if not condition:
+            return 0
+        
+        condition_lower = condition.lower()
+        text_lower = text.lower()
+        
+        # Look for pre-existing condition clauses
+        if "pre-existing" in text_lower or "pre existing" in text_lower:
+            if condition_lower in text_lower:
+                # Check if condition is covered or excluded
+                context_window = 200
+                condition_index = text_lower.find(condition_lower)
+                if condition_index != -1:
+                    context = text_lower[max(0, condition_index-context_window):condition_index+context_window]
+                    
+                    if any(term in context for term in ["covered", "included", "eligible"]):
+                        return 1
+                    elif any(term in context for term in ["excluded", "not covered", "denied"]):
+                        return -2
+            
+            # General pre-existing condition penalty
+            return -1
+        
+        return 0
+    
+    def _check_claim_amount(self, amount: Optional[str], text: str) -> float:
+        """Check if claim amount is within policy limits."""
+        if not amount:
+            return 0
+        
+        try:
+            # Extract numeric amount
+            amount_num = float(re.sub(r'[^\d.]', '', amount))
+            text_lower = text.lower()
+            
+            # Look for coverage limits
+            limit_patterns = [
+                r'(?:maximum|max|limit|cap)[:\s]*[\$₹€£]?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',
+                r'[\$₹€£]\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*(?:maximum|max|limit|cap)'
+            ]
+            
+            for pattern in limit_patterns:
+                matches = re.findall(pattern, text_lower)
+                for limit_str in matches:
+                    limit_amount = float(re.sub(r'[^\d.]', '', limit_str))
+                    if amount_num <= limit_amount:
+                        return 1  # Within limits
+                    else:
+                        return -2  # Exceeds limits
+            
+            # Default scoring based on amount ranges (example for Indian market)
+            if amount_num <= 50000:
+                return 1  # Small claim
+            elif amount_num <= 200000:
+                return 0  # Medium claim
+            else:
+                return -1  # Large claim (may need more scrutiny)
+                
+        except (ValueError, AttributeError):
+            pass
+        
+        return 0
+    
+    def _generate_insurance_justification(self, decision: str, factors: Dict, parsed_query: Dict) -> str:
+        """Generate detailed insurance-specific justification."""
+        
+        justification_parts = []
+        
+        # Decision-specific opening
+        if decision == "Approved":
+            justification_parts.append("Coverage analysis indicates this claim meets policy requirements.")
+        elif decision == "Rejected":
+            justification_parts.append("Coverage analysis indicates this claim does not meet policy requirements.")
+        else:
+            justification_parts.append("This claim requires additional review to determine coverage eligibility.")
+        
+        # Add factor-specific details
+        if factors.get("age_compliance", 0) > 0:
+            justification_parts.append("Patient age meets policy eligibility criteria.")
+        elif factors.get("age_compliance", 0) < 0:
+            justification_parts.append("Patient age may not meet policy eligibility criteria.")
+        
+        if factors.get("procedure_coverage", 0) > 0:
+            justification_parts.append("The requested procedure is covered under the policy.")
+        elif factors.get("procedure_coverage", 0) < 0:
+            justification_parts.append("The requested procedure may be excluded or have restrictions.")
+        
+        if factors.get("geographic_coverage", 0) > 0:
+            justification_parts.append("Treatment location is within the covered service area.")
+        
+        if factors.get("policy_validity", 0) > 0:
+            justification_parts.append("Policy is in good standing and past any waiting periods.")
+        elif factors.get("policy_validity", 0) < 0:
+            justification_parts.append("Policy may still be within a waiting period or have validity issues.")
+        
+        if factors.get("pre_conditions", 0) < 0:
+            justification_parts.append("Pre-existing condition clauses may apply.")
+        
+        if factors.get("claim_amount_validity", 0) > 0:
+            justification_parts.append("Claim amount is within policy limits.")
+        elif factors.get("claim_amount_validity", 0) < 0:
+            justification_parts.append("Claim amount may exceed policy limits.")
+        
+        return " ".join(justification_parts)
+    
+    def _generate_insurance_recommendations(self, decision: str, factors: Dict, parsed_query: Dict) -> List[str]:
+        """Generate insurance-specific recommendations."""
+        
+        recommendations = []
+        
+        if decision == "Approved":
+            recommendations.extend([
+                "Proceed with claim submission through proper channels",
+                "Ensure all required documentation is complete",
+                "Verify network provider status for maximum benefits"
+            ])
+        elif decision == "Rejected":
+            recommendations.extend([
+                "Review policy terms and conditions for coverage details",
+                "Consider alternative treatment options that may be covered",
+                "Contact insurance customer service for clarification"
+            ])
+        else:
+            recommendations.extend([
+                "Gather additional medical documentation",
+                "Obtain pre-authorization if required",
+                "Contact insurance provider for coverage confirmation"
+            ])
+        
+        # Factor-specific recommendations
+        if factors.get("pre_conditions", 0) < 0:
+            recommendations.append("Review pre-existing condition waiting periods and coverage")
+        
+        if factors.get("claim_amount_validity", 0) < 0:
+            recommendations.append("Consider breaking down treatment into phases to stay within limits")
+        
+        if factors.get("geographic_coverage", 0) <= 0:
+            recommendations.append("Verify if treatment can be obtained at a network facility")
+        
+        return recommendations
+    
+    def _generate_insurance_next_steps(self, decision: str, parsed_query: Dict) -> List[str]:
+        """Generate insurance-specific next steps."""
+        
+        next_steps = []
+        
+        if decision == "Approved":
+            next_steps.extend([
+                "Submit formal claim with all required documents",
+                "Keep copies of all medical records and bills",
+                "Follow up on claim status within 15-30 days"
+            ])
+        elif decision == "Rejected":
+            next_steps.extend([
+                "Request detailed explanation from insurance provider",
+                "Consider filing an appeal if decision seems incorrect",
+                "Explore alternative funding options for treatment"
+            ])
+        else:
+            next_steps.extend([
+                "Contact insurance customer service for guidance",
+                "Submit any additional documentation requested",
+                "Schedule follow-up review in 5-7 business days"
+            ])
+        
+        # Query-type specific steps
+        query_type = parsed_query.get('query_type', 'general_inquiry')
+        
+        if query_type == 'pre_authorization':
+            next_steps.append("Submit pre-authorization request with medical necessity documentation")
+        elif query_type == 'claim_submission':
+            next_steps.append("Use online portal or mobile app for faster claim processing")
+        
+        return next_steps
+    
     def is_available(self) -> bool:
         """Check if local AI capabilities are available."""
         return True  # Always available with fallback methods
@@ -413,4 +749,197 @@ class LocalAIClient:
             "sentiment_analysis": self.sentiment_analyzer is not None,
             "summarization": self.summarizer is not None,
             "rule_based_analysis": True
+        }
+    
+    def _analyze_insurance_coverage(self, text: str, parsed_query: Dict, original_query: str) -> Dict[str, Any]:
+        """Domain-specific analysis for insurance coverage queries."""
+        
+        # Insurance-specific keywords and patterns
+        coverage_indicators = {
+            "positive": ["covered", "eligible", "included", "benefits", "entitled", "compensated"],
+            "negative": ["excluded", "not covered", "denied", "restricted", "limitation", "cap"],
+            "conditional": ["subject to", "depends on", "may be covered", "under certain conditions"]
+        }
+        
+        text_lower = text.lower()
+        
+        # Score based on insurance-specific criteria
+        coverage_score = 0
+        
+        # Check coverage keywords
+        for keyword in coverage_indicators["positive"]:
+            coverage_score += text_lower.count(keyword) * 2
+        
+        for keyword in coverage_indicators["negative"]:
+            coverage_score -= text_lower.count(keyword) * 3
+        
+        for keyword in coverage_indicators["conditional"]:
+            coverage_score -= text_lower.count(keyword) * 1
+        
+        # Analyze specific insurance factors
+        factors = {
+            "age_compliance": self._check_age_compliance(parsed_query.get("age"), text),
+            "procedure_coverage": self._check_procedure_coverage(parsed_query.get("procedure"), text),
+            "geographic_coverage": self._check_geographic_coverage(parsed_query.get("location"), text),
+            "policy_validity": self._check_policy_validity(parsed_query.get("policy_duration"), text),
+            "pre_conditions": self._check_pre_existing_conditions(parsed_query.get("medical_condition"), text),
+            "claim_amount_validity": self._check_claim_amount(parsed_query.get("claim_amount"), text)
+        }
+        
+        # Calculate final coverage score
+        total_score = coverage_score + sum(factors.values())
+        
+        # Determine decision with insurance-specific logic
+        if total_score >= 3:
+            decision = "Approved"
+            confidence = "High" if total_score >= 5 else "Medium"
+            risk_level = "Low"
+        elif total_score <= -3:
+            decision = "Rejected"
+            confidence = "High" if total_score <= -5 else "Medium"
+            risk_level = "High"
+        else:
+            decision = "Requires Review"
+            confidence = "Medium"
+            risk_level = "Medium"
+        
+        # Generate insurance-specific justification
+        justification = self._generate_insurance_justification(decision, factors, parsed_query)
+        
+        # Generate recommendations
+        recommendations = self._generate_insurance_recommendations(decision, factors, parsed_query)
+        
+        # Generate next steps
+        next_steps = self._generate_insurance_next_steps(decision, parsed_query)
+        
+        return {
+            "decision": decision,
+            "justification": justification,
+            "confidence": confidence,
+            "risk_level": risk_level,
+            "amount": self._extract_amount(text),
+            "clause_reference": self._find_clause_reference(text),
+            "recommendations": recommendations,
+            "next_steps": next_steps,
+            "factors": factors
+        }
+    
+    def _analyze_legal_compliance(self, text: str, parsed_query: Dict, original_query: str) -> Dict[str, Any]:
+        """Domain-specific analysis for legal and compliance queries."""
+        
+        legal_indicators = {
+            "compliant": ["complies", "meets requirements", "in accordance", "conforms", "satisfies"],
+            "non_compliant": ["violates", "non-compliance", "breach", "fails to meet", "inadequate"],
+            "unclear": ["review required", "unclear", "ambiguous", "interpretation needed"]
+        }
+        
+        text_lower = text.lower()
+        compliance_score = 0
+        
+        for keyword in legal_indicators["compliant"]:
+            compliance_score += text_lower.count(keyword) * 2
+        
+        for keyword in legal_indicators["non_compliant"]:
+            compliance_score -= text_lower.count(keyword) * 3
+        
+        for keyword in legal_indicators["unclear"]:
+            compliance_score -= text_lower.count(keyword) * 1
+        
+        # Legal compliance decision logic
+        if compliance_score >= 2:
+            decision = "Compliant"
+            confidence = "High"
+            risk_level = "Low"
+        elif compliance_score <= -2:
+            decision = "Non-Compliant"
+            confidence = "High"  
+            risk_level = "High"
+        else:
+            decision = "Legal Review Required"
+            confidence = "Medium"
+            risk_level = "Medium"
+        
+        justification = f"Legal compliance analysis indicates {decision.lower()} status based on available documentation."
+        
+        recommendations = [
+            "Consult with legal counsel for definitive interpretation",
+            "Review relevant regulations and guidelines",
+            "Document compliance measures taken"
+        ]
+        
+        next_steps = [
+            "Schedule legal review meeting",
+            "Gather additional documentation if needed",
+            "Implement recommended compliance measures"
+        ]
+        
+        return {
+            "decision": decision,
+            "justification": justification,
+            "confidence": confidence,
+            "risk_level": risk_level,
+            "amount": None,
+            "clause_reference": self._find_clause_reference(text),
+            "recommendations": recommendations,
+            "next_steps": next_steps
+        }
+    
+    def _analyze_hr_benefits(self, text: str, parsed_query: Dict, original_query: str) -> Dict[str, Any]:
+        """Domain-specific analysis for HR and employee benefits queries."""
+        
+        hr_indicators = {
+            "eligible": ["eligible", "entitled", "qualified", "included", "covered"],
+            "ineligible": ["ineligible", "excluded", "not covered", "restricted", "unavailable"],
+            "conditional": ["subject to approval", "depends on", "may qualify", "under review"]
+        }
+        
+        text_lower = text.lower()
+        eligibility_score = 0
+        
+        for keyword in hr_indicators["eligible"]:
+            eligibility_score += text_lower.count(keyword) * 2
+        
+        for keyword in hr_indicators["ineligible"]:
+            eligibility_score -= text_lower.count(keyword) * 3
+        
+        for keyword in hr_indicators["conditional"]:
+            eligibility_score -= text_lower.count(keyword) * 1
+        
+        # HR benefits decision logic
+        if eligibility_score >= 2:
+            decision = "Eligible"
+            confidence = "High"
+            risk_level = "Low"
+        elif eligibility_score <= -2:
+            decision = "Not Eligible"
+            confidence = "High"
+            risk_level = "Low"
+        else:
+            decision = "HR Review Required"
+            confidence = "Medium"
+            risk_level = "Medium"
+        
+        justification = f"HR benefits analysis indicates {decision.lower()} status based on employee handbook and policies."
+        
+        recommendations = [
+            "Review employee handbook for complete details",
+            "Contact HR department for clarification",
+            "Verify employment status and tenure requirements"
+        ]
+        
+        next_steps = [
+            "Submit formal benefits application if eligible",
+            "Schedule meeting with HR representative",
+            "Gather required documentation"
+        ]
+        
+        return {
+            "decision": decision,
+            "justification": justification,
+            "confidence": confidence,
+            "risk_level": risk_level,
+            "amount": self._extract_amount(text),
+            "clause_reference": self._find_clause_reference(text),
+            "recommendations": recommendations,
+            "next_steps": next_steps
         }

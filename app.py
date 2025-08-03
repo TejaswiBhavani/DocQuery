@@ -34,72 +34,23 @@ def main():
     with open('style.css') as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     
-    # POLICYsure Navigation Bar
+    # POLICYsure Navigation Bar - Simplified for Streamlit compatibility
     st.markdown("""
-    <nav class="top-navbar">
-        <div class="navbar-left">
-            <button class="hamburger-menu" onclick="toggleSidebar()">
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-            </button>
-            <div class="logo">POLICYsure</div>
-        </div>
-        <div class="navbar-right">
-            <button class="auth-btn login-btn">Login</button>
-            <button class="auth-btn signup-btn">Signup</button>
-        </div>
-    </nav>
-    """, unsafe_allow_html=True)
-
-    # Main Layout Container
-    st.markdown('<div class="main-layout">', unsafe_allow_html=True)
-    
-    # Collapsible Sidebar
-    st.markdown("""
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-content">
-            <div class="search-section">
-                <input type="text" class="sidebar-search" placeholder="search..." />
-            </div>
-            
-            <div class="documents-section">
-                <h4>Documents of all existing policies in PDF format (inbuilt)</h4>
-                <div class="policy-docs-list">
-                    <div class="policy-item">Health Insurance Policy</div>
-                    <div class="policy-item">Life Insurance Policy</div>
-                    <div class="policy-item">Auto Insurance Policy</div>
-                </div>
-            </div>
-            
-            <div class="config-section">
-                <details class="config-details">
-                    <summary>Configuration details</summary>
-                    <div class="config-content">
-                        <div class="ai-selection">
-                            <label class="radio-option">
-                                <input type="radio" name="ai-config" value="openai" checked>
-                                <span>OpenAI</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="ai-config" value="local">
-                                <span>Local AI (no API key needed)</span>
-                            </label>
-                        </div>
-                    </div>
-                </details>
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem 2rem; margin: -1rem -1rem 2rem -1rem; border-radius: 0 0 20px 20px; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="color: white; font-size: 1.5rem; font-weight: 700;">📋 POLICYsure</div>
+            <div>
+                <span style="color: rgba(255, 255, 255, 0.9); margin-right: 1rem;">AI Document Analysis</span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Main Content Area
+    # App Description
     st.markdown("""
-    <div class="main-content">
-        <div class="app-description">
-            <h2>AI-Powered Document Analysis System</h2>
-            <p>Upload insurance policies, contracts, or any documents and ask natural language questions. Our AI system analyzes your documents and provides intelligent decisions with detailed justifications.</p>
-        </div>
+    <div style="text-align: center; padding: 1rem; margin-bottom: 2rem;">
+        <h2 style="color: #1a202c; margin-bottom: 0.5rem;">AI-Powered Document Analysis System</h2>
+        <p style="color: #4a5568; font-size: 1.1rem;">Upload insurance policies, contracts, or any documents and ask natural language questions. Our AI system analyzes your documents and provides intelligent decisions with detailed justifications.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -123,10 +74,24 @@ def main():
         st.info("The app will continue to work without database features.")
         db = None
 
-    # Enhanced Sidebar
+    # Enhanced Sidebar with Sample Documents
     with st.sidebar:
         st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
         st.markdown("### ⚙️ Configuration")
+        
+        # Sample Documents Section
+        st.markdown("### 📄 Available Sample Documents")
+        sample_docs = [
+            "Health Insurance Policy", 
+            "Life Insurance Policy", 
+            "Auto Insurance Policy",
+            "Sample PDF documents in repository"
+        ]
+        
+        for doc in sample_docs:
+            st.markdown(f"• {doc}")
+        
+        st.markdown("---")
         
         # AI Model Selection
         st.markdown("**AI Analysis Method:**")

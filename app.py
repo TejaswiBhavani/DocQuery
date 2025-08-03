@@ -34,16 +34,71 @@ def main():
     with open('style.css') as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
     
-    # Modern header with enhanced styling
+    # POLICYsure Navigation Bar
     st.markdown("""
-    <div class="app-header">
-        <h1 class="app-title">🤖 AI Document Analysis System</h1>
-        <p class="app-subtitle">Upload any document (PDF, Word, Email) and ask natural language questions for intelligent AI-powered decisions</p>
-        <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 2rem; font-size: 0.9rem; opacity: 0.95;">
-            <span class="float-animation">📄 Multi-format Support</span>
-            <span class="float-animation" style="animation-delay: 0.5s;">🧠 AI-powered Analysis</span>
-            <span class="float-animation" style="animation-delay: 1s;">⚡ Real-time Processing</span>
-            <span class="float-animation" style="animation-delay: 1.5s;">📊 Audit Trail</span>
+    <nav class="top-navbar">
+        <div class="navbar-left">
+            <button class="hamburger-menu" onclick="toggleSidebar()">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <div class="logo">POLICYsure</div>
+        </div>
+        <div class="navbar-right">
+            <button class="auth-btn login-btn">Login</button>
+            <button class="auth-btn signup-btn">Signup</button>
+        </div>
+    </nav>
+    """, unsafe_allow_html=True)
+
+    # Main Layout Container
+    st.markdown('<div class="main-layout">', unsafe_allow_html=True)
+    
+    # Collapsible Sidebar
+    st.markdown("""
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-content">
+            <div class="search-section">
+                <input type="text" class="sidebar-search" placeholder="search..." />
+            </div>
+            
+            <div class="documents-section">
+                <h4>Documents of all existing policies in PDF format (inbuilt)</h4>
+                <div class="policy-docs-list">
+                    <div class="policy-item">Health Insurance Policy</div>
+                    <div class="policy-item">Life Insurance Policy</div>
+                    <div class="policy-item">Auto Insurance Policy</div>
+                </div>
+            </div>
+            
+            <div class="config-section">
+                <details class="config-details">
+                    <summary>Configuration details</summary>
+                    <div class="config-content">
+                        <div class="ai-selection">
+                            <label class="radio-option">
+                                <input type="radio" name="ai-config" value="openai" checked>
+                                <span>OpenAI</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="ai-config" value="local">
+                                <span>Local AI (no API key needed)</span>
+                            </label>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Main Content Area
+    st.markdown("""
+    <div class="main-content">
+        <div class="app-description">
+            <h2>AI-Powered Document Analysis System</h2>
+            <p>Upload insurance policies, contracts, or any documents and ask natural language questions. Our AI system analyzes your documents and provides intelligent decisions with detailed justifications.</p>
         </div>
     </div>
     """, unsafe_allow_html=True)

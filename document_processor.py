@@ -3,6 +3,11 @@ import re
 import email
 import os
 from typing import List, Optional
+from error_codes import (
+    DocumentException, 
+    DocQueryErrorCodes
+)
+
 try:
     from docx import Document
     DOCX_AVAILABLE = True
@@ -33,7 +38,28 @@ class DocumentProcessor:
     
     def extract_text(self, file_path: str) -> str:
         """Extract text content from various document formats."""
+        # Check if file exists
+        if not os.path.exists(file_path):
+            raise DocumentException(
+                "DOCUMENT_NOT_FOUND",
+                details={"file_path": file_path}
+            )
+        
+        # Check file size (200MB limit)
+        file_size = os.path.getsize(file_path)
+        if file_size > 200 * 1024 * 1024:  # 200MB
+            raise DocumentException(
+                "DOCUMENT_TOO_LARGE",
+                details={"file_size": file_size, "max_size": 200 * 1024 * 1024}
+            )
+        
         file_type = self.detect_file_type(file_path)
+        
+        if file_type == 'unknown':
+            raise DocumentException(
+                "DOCUMENT_FORMAT_UNSUPPORTED",
+                details={"file_path": file_path, "detected_type": file_type}
+            )
         
         try:
             if file_type == 'pdf':
@@ -45,10 +71,21 @@ class DocumentProcessor:
             else:
                 # Try to read as plain text
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
-                    return self._clean_text(file.read())
+                    content = self._clean_text(file.read())
+                    if not content.strip():
+                        raise DocumentException(
+                            "DOCUMENT_EXTRACTION_FAILED",
+                            details={"file_path": file_path, "reason": "Empty content"}
+                        )
+                    return content
                     
+        except DocumentException:
+            raise  # Re-raise DocQuery exceptions
         except Exception as e:
-            raise Exception(f"Error extracting text from {file_type} file: {str(e)}")
+            raise DocumentException(
+                "DOCUMENT_EXTRACTION_FAILED",
+                details={"file_path": file_path, "original_error": str(e)}
+            )
     
     def _extract_pdf_text(self, pdf_path: str) -> str:
         """Extract text content from a PDF file."""
@@ -60,7 +97,10 @@ class DocumentProcessor:
                 
                 # Check if PDF is encrypted
                 if pdf_reader.is_encrypted:
-                    raise Exception("PDF is encrypted and cannot be processed")
+                    raise DocumentException(
+                        "DOCUMENT_EXTRACTION_FAILED",
+                        details={"file_path": pdf_path, "reason": "PDF is password-protected"}
+                    )
                 
                 # Extract text from all pages
                 for page_num in range(len(pdf_reader.pages)):
@@ -70,14 +110,25 @@ class DocumentProcessor:
                         text_content += page_text + "\n"
                 
                 if not text_content.strip():
-                    raise Exception("No text content found in PDF")
+                    raise DocumentException(
+                        "DOCUMENT_EXTRACTION_FAILED",
+                        details={"file_path": pdf_path, "reason": "No text content found in PDF"}
+                    )
                 
                 return self._clean_text(text_content)
                 
+        except DocumentException:
+            raise  # Re-raise DocQuery exceptions
         except PyPDF2.errors.PdfReadError as e:
-            raise Exception(f"Error reading PDF file: {str(e)}")
+            raise DocumentException(
+                "DOCUMENT_EXTRACTION_FAILED",
+                details={"file_path": pdf_path, "original_error": str(e)}
+            )
         except Exception as e:
-            raise Exception(f"Error extracting text from PDF: {str(e)}")
+            raise DocumentException(
+                "DOCUMENT_EXTRACTION_FAILED",
+                details={"file_path": pdf_path, "original_error": str(e)}
+            )
     
     def _extract_docx_text(self, docx_path: str) -> str:
         """Extract text content from a Word document."""

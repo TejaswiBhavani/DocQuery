@@ -2,6 +2,7 @@ import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 from typing import List, Optional
+from error_codes import SearchException, AIException
 
 class VectorSearch:
     """Handles document embedding generation and FAISS-based semantic search."""
@@ -19,7 +20,10 @@ class VectorSearch:
             self.document_chunks = []
             self.embeddings = None
         except Exception as e:
-            raise Exception(f"Failed to initialize sentence transformer model: {str(e)}")
+            raise AIException(
+                "AI_MODEL_NOT_AVAILABLE",
+                details={"model_name": model_name, "original_error": str(e)}
+            )
     
     def build_index(self, document_chunks: List[str]) -> None:
         """
@@ -29,10 +33,13 @@ class VectorSearch:
             document_chunks: List of text chunks to index
             
         Raises:
-            Exception: If indexing fails
+            SearchException: If indexing fails
         """
         if not document_chunks:
-            raise Exception("No document chunks provided for indexing")
+            raise SearchException(
+                "SEARCH_INDEX_NOT_BUILT",
+                details={"reason": "No document chunks provided"}
+            )
         
         try:
             # Store chunks
@@ -59,7 +66,10 @@ class VectorSearch:
             self.index.add(self.embeddings)
             
         except Exception as e:
-            raise Exception(f"Failed to build FAISS index: {str(e)}")
+            raise SearchException(
+                "SEARCH_INDEX_NOT_BUILT",
+                details={"original_error": str(e), "chunk_count": len(document_chunks)}
+            )
     
     def search(self, query: str, k: int = 3) -> List[str]:
         """
@@ -73,13 +83,19 @@ class VectorSearch:
             List of most relevant document chunks
             
         Raises:
-            Exception: If search fails or index not built
+            SearchException: If search fails or index not built
         """
         if self.index is None:
-            raise Exception("Index not built. Call build_index() first.")
+            raise SearchException(
+                "SEARCH_INDEX_NOT_BUILT",
+                details={"reason": "Index not built, call build_index() first"}
+            )
         
         if not query.strip():
-            raise Exception("Query cannot be empty")
+            raise SearchException(
+                "SEARCH_QUERY_EMPTY",
+                details={"query": query}
+            )
         
         try:
             # Generate query embedding
@@ -102,10 +118,22 @@ class VectorSearch:
                 if idx >= 0 and idx < len(self.document_chunks):
                     relevant_chunks.append(self.document_chunks[idx])
             
+            # Check if we found any results
+            if not relevant_chunks:
+                raise SearchException(
+                    "SEARCH_NO_RESULTS",
+                    details={"query": query, "searched_chunks": len(self.document_chunks)}
+                )
+            
             return relevant_chunks
             
+        except SearchException:
+            raise  # Re-raise search exceptions
         except Exception as e:
-            raise Exception(f"Search failed: {str(e)}")
+            raise SearchException(
+                "SEARCH_INDEX_NOT_BUILT",
+                details={"original_error": str(e), "query": query}
+            )
     
     def get_similarity_scores(self, query: str, k: int = 3) -> List[tuple]:
         """

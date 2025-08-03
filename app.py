@@ -8,6 +8,14 @@ from query_parser import QueryParser
 from openai_client import OpenAIClient
 from local_ai_client import LocalAIClient
 from database_manager import DatabaseManager
+from error_codes import (
+    DocQueryException, 
+    DocumentException, 
+    AIException, 
+    SearchException, 
+    DatabaseException,
+    DocQueryErrorCodes
+)
 
 # Try to import advanced vector search, fallback to simpler alternatives
 try:
@@ -20,6 +28,45 @@ except ImportError:
     except ImportError:
         from simple_vector_search import SimpleVectorSearch as VectorSearch
         SEARCH_TYPE = "Simple text-based search"
+
+def display_error(error: DocQueryException):
+    """Display a structured error with documentation link."""
+    error_dict = error.to_dict()
+    
+    # Create error card
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); 
+                color: white; padding: 1.5rem; border-radius: 10px; margin: 1rem 0;">
+        <h3 style="margin: 0 0 0.5rem 0;">⚠️ {error_dict.get('title', 'Error')}</h3>
+        <p style="margin: 0 0 1rem 0; opacity: 0.9;">{error_dict.get('message', '')}</p>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <span style="background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; 
+                         border-radius: 15px; font-size: 0.9rem;">
+                Code: {error_dict.get('error_code', 'UNKNOWN')}
+            </span>
+            <span style="background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; 
+                         border-radius: 15px; font-size: 0.9rem;">
+                Status: {error_dict.get('status_code', 'N/A')}
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Solutions in expandable section
+    if error_dict.get('solutions'):
+        with st.expander("💡 Solutions", expanded=True):
+            for solution in error_dict['solutions']:
+                st.markdown(f"• {solution}")
+    
+    # Error documentation link
+    if st.button("📚 View Error Documentation", key=f"error_doc_{error.error_code}"):
+        st.markdown("""
+        <script>
+        window.open('/error_documentation.py', '_blank');
+        </script>
+        """, unsafe_allow_html=True)
+        st.info("Error documentation would open in a new tab (functionality available when running as separate page)")
+
 
 # Set page configuration
 st.set_page_config(
@@ -70,8 +117,12 @@ def main():
             st.session_state.db_manager = DatabaseManager()
         db = st.session_state.db_manager
     except Exception as e:
-        st.error(f"❌ Database connection failed: {str(e)}")
-        st.info("The app will continue to work without database features.")
+        # Create and display database error
+        db_error = DatabaseException(
+            "DATABASE_CONNECTION_FAILED",
+            details={"original_error": str(e)}
+        )
+        display_error(db_error)
         db = None
 
     # Enhanced Sidebar with Sample Documents
@@ -170,6 +221,26 @@ def main():
                 st.markdown("**AI Method:** 🤖 Local AI")
             else:
                 st.markdown("**AI Method:** 🌐 OpenAI GPT")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Error Documentation section
+        st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+        st.markdown("### 📚 Help & Documentation")
+        
+        if st.button("⚠️ Error Code Documentation", use_container_width=True):
+            st.markdown("""
+            <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                <p><strong>📋 Error Documentation Available</strong></p>
+                <p>Run <code>streamlit run error_documentation.py</code> to view detailed error codes and solutions.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Error statistics
+        total_errors = len(DocQueryErrorCodes.get_all_errors())
+        categories = len(set(error.category for error in DocQueryErrorCodes.get_all_errors().values()))
+        st.markdown(f"**Error Codes:** {total_errors} codes in {categories} categories")
+        
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Main content area with improved layout
@@ -240,7 +311,12 @@ def main():
                             )
                             st.session_state.current_document_id = document_id
                         except Exception as db_error:
-                            st.warning(f"Database save failed: {str(db_error)}")
+                            # Create database error but don't stop processing
+                            db_exception = DatabaseException(
+                                "DATABASE_SAVE_FAILED",
+                                details={"operation": "save_document", "original_error": str(db_error)}
+                            )
+                            display_error(db_exception)
                             st.session_state.current_document_id = None
 
                 # Success message with better styling
@@ -262,8 +338,16 @@ def main():
                         avg_size = len(text_content) // len(chunks) if chunks else 0
                         st.metric("Avg Chunk Size", f"{avg_size:,}")
 
+            except DocQueryException as e:
+                # Display structured error
+                display_error(e)
             except Exception as e:
-                st.error(f"❌ Error processing document: {str(e)}")
+                # Convert generic exception to internal error
+                internal_error = DocQueryException(
+                    "INTERNAL_SYSTEM_ERROR",
+                    details={"operation": "document_processing", "original_error": str(e)}
+                )
+                display_error(internal_error)
 
     with col2:
         st.markdown("### ❓ Query Analysis")
@@ -442,7 +526,12 @@ def main():
                                         processing_time=total_time
                                     )
                                 except Exception as db_error:
-                                    st.warning(f"Database save failed: {str(db_error)}")
+                                    # Create database error but don't stop processing
+                                    db_exception = DatabaseException(
+                                        "DATABASE_SAVE_FAILED",
+                                        details={"operation": "save_analysis", "original_error": str(db_error)}
+                                    )
+                                    display_error(db_exception)
 
                         # Enhanced results display
                         st.markdown('<div class="results-section">', unsafe_allow_html=True)
@@ -508,10 +597,26 @@ def main():
                         
                         st.markdown('</div>', unsafe_allow_html=True)
 
+                    except DocQueryException as e:
+                        # Display structured error
+                        display_error(e)
                     except Exception as e:
-                        st.error(f"❌ Error analyzing query: {str(e)}")
+                        # Convert generic exception to appropriate error type
+                        if "api" in str(e).lower() or "openai" in str(e).lower():
+                            ai_error = AIException(
+                                "AI_API_KEY_INVALID" if "api" in str(e).lower() else "AI_ANALYSIS_FAILED",
+                                details={"original_error": str(e)}
+                            )
+                        else:
+                            ai_error = AIException(
+                                "AI_ANALYSIS_FAILED",
+                                details={"original_error": str(e)}
+                            )
+                        display_error(ai_error)
                 else:
-                    st.warning("⚠️ Please enter a query to analyze")
+                    # Display empty query error
+                    empty_query_error = SearchException("SEARCH_QUERY_EMPTY")
+                    display_error(empty_query_error)
 
     # Enhanced Analytics and History Section
     st.markdown("---")

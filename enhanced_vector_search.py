@@ -4,6 +4,7 @@ from typing import List, Tuple, Dict
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from error_codes import SearchException
 
 class EnhancedVectorSearch:
     """Enhanced vector search using TF-IDF and cosine similarity for semantic understanding."""
@@ -23,7 +24,10 @@ class EnhancedVectorSearch:
             document_chunks: List of text chunks to index
         """
         if not document_chunks:
-            raise Exception("No document chunks provided for indexing")
+            raise SearchException(
+                "SEARCH_INDEX_NOT_BUILT",
+                details={"reason": "No document chunks provided"}
+            )
         
         self.document_chunks = document_chunks
         

@@ -1,0 +1,130 @@
+# Vercel Ignore File
+# Files and directories to exclude from Vercel deployment
+
+# PDF documents (large files)
+*.pdf
+*.PDF
+
+# Python cache and build files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git directory
+.git/
+.gitignore
+
+# Documentation that's not needed for runtime
+*.md
+!README.md
+docs/
+documentation/
+
+# Test files
+test_*.py
+*_test.py
+tests/
+__tests__/
+.pytest_cache/
+
+# Development tools
+.replit
+replit.md
+.nix/
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+*.m4v
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+*.wma
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter notebooks
+*.ipynb
+
+# Sample data files (keep small ones, exclude large ones)
+sample_*.txt
+sample_*.json
+sample_*.csv
+
+# Keep essential config and data files
+!requirements.txt
+!requirements-*.txt
+!vercel.json
+!app.py
+!*.py
+!style.css
+!.streamlit/

@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import json
+import sys
 import tempfile
 import time
 
@@ -879,18 +880,59 @@ def handler(event, context):
     Vercel serverless function handler.
     This function is called by Vercel's serverless runtime.
     """
-    # For Vercel deployment, return information about how to run the app
-    return {
-        'statusCode': 200,
-        'headers': {
-            'Content-Type': 'application/json',
-        },
-        'body': json.dumps({
-            'message': 'DocQuery Streamlit App',
-            'instructions': 'Use: streamlit run app.py --server.port $PORT',
-            'port': os.getenv('PORT', '8501')
-        })
-    }
+    try:
+        # Get environment information
+        port = os.getenv('PORT', '8501')
+        python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        
+        # Check if running in Vercel environment
+        vercel_region = os.getenv('VERCEL_REGION', 'unknown')
+        vercel_url = os.getenv('VERCEL_URL', 'not-set')
+        
+        response_data = {
+            'message': 'DocQuery Streamlit App - Deployment Successful',
+            'status': 'healthy',
+            'environment': {
+                'port': port,
+                'python_version': python_version,
+                'vercel_region': vercel_region,
+                'vercel_url': vercel_url,
+                'streamlit_headless': os.getenv('STREAMLIT_SERVER_HEADLESS', 'not-set')
+            },
+            'instructions': {
+                'local': 'streamlit run app.py',
+                'vercel': f'Deployed at: https://{vercel_url}' if vercel_url != 'not-set' else 'Check Vercel dashboard for URL'
+            },
+            'health_check': 'Use health_check.py to verify deployment',
+            'troubleshooting': 'See VERCEL_TROUBLESHOOTING.md for common issues'
+        }
+        
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'public, max-age=60',
+                'X-Powered-By': 'DocQuery-Streamlit',
+            },
+            'body': json.dumps(response_data, indent=2)
+        }
+        
+    except Exception as e:
+        # Error handling for the handler itself
+        error_response = {
+            'message': 'DocQuery Handler Error',
+            'status': 'error',
+            'error': str(e),
+            'troubleshooting': 'Check VERCEL_TROUBLESHOOTING.md for solutions'
+        }
+        
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+            },
+            'body': json.dumps(error_response, indent=2)
+        }
 
 if __name__ == "__main__":
     import os

@@ -199,7 +199,7 @@ class LocalAIClient:
             for term in age_terms:
                 if term in text_lower:
                     # Extract numbers near age terms
-                    pattern = f"{term}[^0-9]*(\d+)"
+                    pattern = f"{term}[^0-9]*(\\d+)"
                     match = re.search(pattern, text_lower)
                     if match:
                         limit_age = int(match.group(1))
@@ -287,7 +287,7 @@ class LocalAIClient:
                 for term in waiting_terms:
                     if term in text_lower:
                         # Extract waiting period
-                        pattern = f"{term}[^0-9]*(\d+)\s*(month|day)"
+                        pattern = f"{term}[^0-9]*(\\d+)\\s*(month|day)"
                         match = re.search(pattern, text_lower)
                         if match:
                             wait_num = int(match.group(1))

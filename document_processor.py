@@ -2,7 +2,7 @@ import PyPDF2
 import re
 import email
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict
 try:
     from docx import Document
     DOCX_AVAILABLE = True
@@ -17,6 +17,37 @@ except ImportError:
 
 class DocumentProcessor:
     """Handles document processing and text extraction for multiple formats."""
+    
+    def __init__(self):
+        """Initialize with capability checking."""
+        self.supported_formats = {
+            'pdf': {'available': True, 'description': 'PDF documents'},
+            'txt': {'available': True, 'description': 'Plain text files'},
+            'eml': {'available': True, 'description': 'Email files'},
+            'docx': {'available': DOCX_AVAILABLE, 'description': 'Microsoft Word documents'}
+        }
+    
+    def get_supported_formats(self) -> Dict[str, bool]:
+        """Return dictionary of supported formats and their availability."""
+        return {fmt: info['available'] for fmt, info in self.supported_formats.items()}
+    
+    def get_format_help_text(self) -> str:
+        """Return user-friendly text about supported formats."""
+        available = [f"{fmt.upper()} ({info['description']})" 
+                    for fmt, info in self.supported_formats.items() 
+                    if info['available']]
+        
+        unavailable = [f"{fmt.upper()} ({info['description']})" 
+                      for fmt, info in self.supported_formats.items() 
+                      if not info['available']]
+        
+        text = f"**Supported formats**: {', '.join(available)}"
+        
+        if unavailable:
+            text += f"\n\n**Additional formats available with optional dependencies**: {', '.join(unavailable)}"
+            text += "\n💡 *Install `python-docx` for Word document support*"
+        
+        return text
     
     def detect_file_type(self, file_path: str) -> str:
         """Detect file type based on content and extension."""

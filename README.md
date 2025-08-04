@@ -55,26 +55,79 @@ Based on comprehensive testing with 20+ real-world scenarios:
 
 ## 🔧 Installation & Setup
 
-### Prerequisites
-- Python 3.11+
-- Dependencies listed in `pyproject.toml`
-
-### Quick Start
+### Quick Start (Basic Functionality)
 ```bash
-# Install dependencies
+# Clone the repository
+git clone https://github.com/TejaswiBhavani/DocQuery.git
+cd DocQuery
+
+# Install core dependencies
 pip install -e .
 
-# Run the web application
+# Run the application
 streamlit run app.py --server.port 8080
-
-# Run comprehensive tests
-python test_suite.py
 ```
 
-### Optional Enhancements
-For advanced features, install additional dependencies:
+### Enhanced Setup (Full AI Capabilities)
+For the best experience with advanced AI features:
+
 ```bash
-pip install sentence-transformers faiss-cpu python-docx
+# Option 1: Use the automated setup utility
+python setup.py --enhanced
+
+# Option 2: Manual installation
+pip install -e .
+pip install transformers sentence-transformers faiss-cpu python-docx spacy
+python -m spacy download en_core_web_sm
+```
+
+### Check Your System
+```bash
+# Check what features are available
+python setup.py --check
+
+# Or run the dependency checker
+python dependency_checker.py
+```
+
+### Prerequisites
+- **Python 3.11+** (tested with 3.11 and 3.12)
+- **Core dependencies**: Automatically installed with `pip install -e .`
+
+### Feature Matrix
+
+| Feature | Basic Setup | Enhanced Setup | Benefits |
+|---------|-------------|----------------|----------|
+| PDF Processing | ✅ | ✅ | Core functionality |
+| Text/Email Files | ✅ | ✅ | Basic document support |
+| Word Documents (.docx) | ❌ | ✅ | `python-docx` required |
+| TF-IDF Search | ✅ | ✅ | Fast text search |
+| Semantic Search | ❌ | ✅ | Better understanding |
+| Local AI Models | ❌ | ✅ | No API keys needed |
+| Rule-based Analysis | ✅ | ✅ | Always available |
+| OpenAI Integration | ✅ | ✅ | Requires API key |
+
+### Optional Enhancements
+
+#### For Enhanced Document Processing:
+```bash
+pip install python-docx  # Word document support
+```
+
+#### For Advanced AI (No API Keys Required):
+```bash
+pip install transformers torch  # Local AI models
+```
+
+#### For Better Search Performance:
+```bash
+pip install sentence-transformers faiss-cpu  # Semantic search
+```
+
+#### For Advanced NLP:
+```bash
+pip install spacy
+python -m spacy download en_core_web_sm
 ```
 
 ## 💼 Use Cases

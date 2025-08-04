@@ -3,6 +3,24 @@ import os
 import json
 import tempfile
 import time
+
+# Configure environment for Streamlit deployment
+def setup_environment():
+    """Setup environment variables for Streamlit deployment."""
+    # Read PORT environment variable (default 8501)
+    port = int(os.getenv('PORT', '8501'))
+    
+    # Set Streamlit environment variables if not already set
+    os.environ.setdefault('STREAMLIT_SERVER_PORT', str(port))
+    os.environ.setdefault('STREAMLIT_SERVER_ADDRESS', '0.0.0.0')
+    os.environ.setdefault('STREAMLIT_SERVER_HEADLESS', 'true')
+    os.environ.setdefault('STREAMLIT_BROWSER_GATHER_USAGE_STATS', 'false')
+    
+    return port
+
+# Setup environment before importing other modules
+setup_environment()
+
 from document_processor import DocumentProcessor
 from query_parser import QueryParser
 from openai_client import OpenAIClient
@@ -855,5 +873,36 @@ def main():
 
 
 
+# Vercel serverless function handler
+def handler(event, context):
+    """
+    Vercel serverless function handler.
+    This function is called by Vercel's serverless runtime.
+    """
+    # For Vercel deployment, return information about how to run the app
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+        },
+        'body': json.dumps({
+            'message': 'DocQuery Streamlit App',
+            'instructions': 'Use: streamlit run app.py --server.port $PORT',
+            'port': os.getenv('PORT', '8501')
+        })
+    }
+
 if __name__ == "__main__":
+    import os
+    
+    # Read PORT environment variable (default 8501 for Streamlit)
+    port = int(os.getenv('PORT', '8501'))
+    
+    # Set Streamlit configuration via environment variables
+    os.environ.setdefault('STREAMLIT_SERVER_PORT', str(port))
+    os.environ.setdefault('STREAMLIT_SERVER_ADDRESS', '0.0.0.0')
+    os.environ.setdefault('STREAMLIT_SERVER_HEADLESS', 'true')
+    os.environ.setdefault('STREAMLIT_BROWSER_GATHER_USAGE_STATS', 'false')
+    
+    # Run the main Streamlit app
     main()

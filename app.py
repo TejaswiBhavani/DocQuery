@@ -8,6 +8,7 @@ from query_parser import QueryParser
 from openai_client import OpenAIClient
 from local_ai_client import LocalAIClient
 from database_manager import DatabaseManager
+from dependency_checker import DependencyChecker
 
 # Try to import advanced vector search, fallback to simpler alternatives
 try:
@@ -83,6 +84,10 @@ def main():
     # Load custom CSS with fallback
     load_css()
     
+    # Initialize dependency checker
+    dep_checker = DependencyChecker()
+    capabilities = dep_checker.get_capabilities_summary()
+    
     # POLICYsure Navigation Bar - Simplified for Streamlit compatibility
     st.markdown("""
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1rem 2rem; margin: -1rem -1rem 2rem -1rem; border-radius: 0 0 20px 20px; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);">
@@ -94,6 +99,42 @@ def main():
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Show system status and capabilities
+    if not capabilities['basic_functionality']:
+        st.error("❌ **Critical Dependencies Missing**")
+        st.write("Some core dependencies are missing. Please install them:")
+        st.code("pip install -e .")
+        return
+    
+    # Show enhanced capabilities status
+    missing_features = []
+    if not capabilities['word_processing']:
+        missing_features.append("Word document support")
+    if not capabilities['advanced_ai']:
+        missing_features.append("Advanced AI models")
+    if not capabilities['semantic_search']:
+        missing_features.append("Semantic search")
+    
+    if missing_features:
+        with st.expander("🔧 **Enhance Your Experience** - Optional Features Available", expanded=False):
+            st.info(f"""
+            **Missing Features**: {', '.join(missing_features)}
+            
+            To unlock advanced capabilities, install optional dependencies:
+            ```bash
+            pip install transformers sentence-transformers faiss-cpu python-docx
+            ```
+            
+            **Benefits**:
+            - 🤖 Advanced local AI models (no API key needed)  
+            - 🔍 Semantic search (better document understanding)
+            - 📄 Word document support (.docx files)
+            - ⚡ Faster search performance
+            """)
+            
+            if st.button("📋 View Detailed Dependency Report"):
+                st.text(dep_checker.generate_report())
 
     # App Description
     st.markdown("""
@@ -234,26 +275,59 @@ def main():
     with col1:
         st.markdown("### 📁 Document Upload")
         
-        # Custom upload area
+        # Initialize document processor to check supported formats
+        processor = DocumentProcessor()
+        supported_formats = processor.get_supported_formats()
+        
+        # Create file type list based on what's actually supported
+        supported_extensions = []
+        if supported_formats.get('pdf', False):
+            supported_extensions.append('pdf')
+        if supported_formats.get('docx', False):
+            supported_extensions.extend(['docx', 'doc'])
+        if supported_formats.get('txt', False):
+            supported_extensions.append('txt')
+        if supported_formats.get('eml', False):
+            supported_extensions.append('eml')
+        
+        # Custom upload area with dynamic format info
         st.markdown('<div class="upload-section">', unsafe_allow_html=True)
         uploaded_file = st.file_uploader(
             "Choose your document",
-            type=['pdf', 'docx', 'doc', 'txt', 'eml'],
-            help="Upload PDFs, Word documents, emails, or text files for AI analysis",
+            type=supported_extensions,
+            help=processor.get_format_help_text(),
             label_visibility="collapsed"
         )
         
         if not uploaded_file:
-            st.markdown("""
+            # Show supported formats dynamically
+            format_list = []
+            if supported_formats.get('pdf', False):
+                format_list.append("PDF")
+            if supported_formats.get('docx', False):
+                format_list.append("Word (.docx)")
+            if supported_formats.get('txt', False):
+                format_list.append("Text (.txt)")
+            if supported_formats.get('eml', False):
+                format_list.append("Email (.eml)")
+            
+            formats_text = " • ".join(format_list)
+            
+            st.markdown(f"""
             <div style="text-align: center; padding: 2rem;">
                 <h4>📄 Drop your document here</h4>
-                <p>Supported formats: PDF • Word (.docx) • Email (.eml) • Text (.txt)</p>
+                <p>Supported formats: {formats_text}</p>
                 <p><em>Insurance policies • Contracts • Legal documents • Emails • Reports</em></p>
                 <div style="margin-top: 1rem; color: #6c757d;">
                     <small>📁 Maximum file size: 200MB</small>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+            
+            # Show info about additional formats if available
+            if not supported_formats.get('docx', False):
+                st.info("💡 **Want Word document support?** Install `python-docx` for .docx file processing")
+        
         st.markdown('</div>', unsafe_allow_html=True)
 
         if uploaded_file is not None:

@@ -782,4 +782,18 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # For Vercel deployment, check if PORT environment variable is set
+    port = os.environ.get("PORT")
+    if port:
+        # When deployed on Vercel, we need to run Streamlit with the provided PORT
+        import subprocess
+        import sys
+        subprocess.run([
+            sys.executable, "-m", "streamlit", "run", __file__,
+            "--server.port", str(port),
+            "--server.address", "0.0.0.0",
+            "--server.headless", "true"
+        ])
+    else:
+        # Local development - run normally
+        main()

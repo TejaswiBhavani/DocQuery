@@ -29,10 +29,59 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+def load_css():
+    """Load custom CSS with error handling for deployment environments"""
+    try:
+        # Try to load from current directory first
+        css_path = 'style.css'
+        if not os.path.exists(css_path):
+            # Try relative path from app.py location
+            css_path = os.path.join(os.path.dirname(__file__), 'style.css')
+        
+        with open(css_path, 'r', encoding='utf-8') as f:
+            css_content = f.read()
+            st.markdown(f'<style>{css_content}</style>', unsafe_allow_html=True)
+    except Exception as e:
+        st.warning(f"⚠️ Could not load custom styles: {str(e)}")
+        # Fallback CSS for basic styling
+        fallback_css = """
+        <style>
+        .main { padding: 1rem; }
+        .stButton > button { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 0.5rem 1rem; 
+        }
+        .success-card { 
+            background: #d4edda; 
+            padding: 1rem; 
+            border-radius: 8px; 
+            color: #155724; 
+            margin: 1rem 0; 
+        }
+        .warning-card { 
+            background: #fff3cd; 
+            padding: 1rem; 
+            border-radius: 8px; 
+            color: #856404; 
+            margin: 1rem 0; 
+        }
+        .error-card { 
+            background: #f8d7da; 
+            padding: 1rem; 
+            border-radius: 8px; 
+            color: #721c24; 
+            margin: 1rem 0; 
+        }
+        </style>
+        """
+        st.markdown(fallback_css, unsafe_allow_html=True)
+
 def main():
-    # Load custom CSS
-    with open('style.css') as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    # Load custom CSS with fallback
+    load_css()
     
     # POLICYsure Navigation Bar - Simplified for Streamlit compatibility
     st.markdown("""
@@ -64,15 +113,25 @@ def main():
     if 'current_document_id' not in st.session_state:
         st.session_state.current_document_id = None
     
-    # Initialize database
+    # Initialize database with better error handling
     try:
         if 'db_manager' not in st.session_state:
             st.session_state.db_manager = DatabaseManager()
         db = st.session_state.db_manager
+        
+        # Test database connection
+        try:
+            analytics = db.get_analytics()
+            db_status = "🟢 Connected"
+        except Exception as e:
+            st.warning(f"⚠️ Database features unavailable: {str(e)}")
+            db_status = "🟡 Limited functionality"
+            
     except Exception as e:
         st.error(f"❌ Database connection failed: {str(e)}")
-        st.info("The app will continue to work without database features.")
+        st.info("💡 The app will continue to work without database features.")
         db = None
+        db_status = "🔴 Disconnected"
 
     # Enhanced Sidebar with Sample Documents
     with st.sidebar:
@@ -159,10 +218,7 @@ def main():
         st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
         st.markdown("### 📊 System Status")
         st.markdown(f"**Search Engine:** {SEARCH_TYPE.split(' ')[0]} search")
-        if db:
-            st.markdown("**Database:** 🟢 Connected")
-        else:
-            st.markdown("**Database:** 🔴 Disconnected")
+        st.markdown(f"**Database:** {db_status}")
         
         # Show AI method status
         if 'use_local_ai' in locals():
@@ -203,22 +259,43 @@ def main():
         if uploaded_file is not None:
             try:
                 start_time = time.time()
-                with st.spinner("Processing document..."):
+                
+                # Create progress indicators
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                with st.spinner("🔄 Processing document..."):
+                    progress_bar.progress(10)
+                    status_text.text("📄 Reading document...")
+                    
                     # Save uploaded file temporarily with proper extension
                     file_extension = os.path.splitext(uploaded_file.name)[1]
                     with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
                         tmp_file.write(uploaded_file.getvalue())
                         tmp_file_path = tmp_file.name
 
+                    progress_bar.progress(30)
+                    status_text.text("📝 Extracting text content...")
+                    
                     # Process document
                     processor = DocumentProcessor()
                     text_content = processor.extract_text(tmp_file_path)
+                    
+                    progress_bar.progress(60)
+                    status_text.text("🔍 Creating searchable chunks...")
+                    
                     chunks = processor.chunk_text(text_content)
 
+                    progress_bar.progress(80)
+                    status_text.text("🧠 Building search index...")
+                    
                     # Initialize vector search
                     vector_search = VectorSearch()
                     vector_search.build_index(chunks)
 
+                    progress_bar.progress(95)
+                    status_text.text("💾 Saving to session...")
+                    
                     # Store in session state
                     st.session_state.processed_documents = True
                     st.session_state.vector_search = vector_search
@@ -226,6 +303,9 @@ def main():
 
                     # Clean up temp file
                     os.unlink(tmp_file_path)
+                    
+                    progress_bar.progress(100)
+                    status_text.text("✅ Document processing complete!")
                     
                     # Save to database
                     if db:
@@ -240,14 +320,19 @@ def main():
                             )
                             st.session_state.current_document_id = document_id
                         except Exception as db_error:
-                            st.warning(f"Database save failed: {str(db_error)}")
+                            st.warning(f"⚠️ Database save failed: {str(db_error)}")
                             st.session_state.current_document_id = None
 
+                # Clear progress indicators
+                progress_bar.empty()
+                status_text.empty()
+                
                 # Success message with better styling
+                processing_time = time.time() - start_time
                 st.markdown(f'''
                 <div class="success-card">
                     <h4>✅ Document processed successfully!</h4>
-                    <p>Found <strong>{len(chunks)}</strong> text chunks • Using <strong>{SEARCH_TYPE.split(" ")[0]}</strong> search</p>
+                    <p>📊 <strong>{len(chunks)}</strong> text chunks • 🔍 <strong>{SEARCH_TYPE.split(" ")[0]}</strong> search • ⏱️ <strong>{processing_time:.2f}s</strong></p>
                 </div>
                 ''', unsafe_allow_html=True)
                 
@@ -395,14 +480,28 @@ def main():
                 if user_query.strip():
                     try:
                         start_time = time.time()
-                        with st.spinner("Analyzing query..."):
+                        
+                        # Create progress indicators for analysis
+                        analysis_progress = st.progress(0)
+                        analysis_status = st.empty()
+                        
+                        with st.spinner("🤖 AI Analysis in progress..."):
+                            analysis_progress.progress(20)
+                            analysis_status.text("📝 Parsing your query...")
+                            
                             # Parse query
                             parser = QueryParser()
                             parsed_query = parser.parse_query(user_query)
 
+                            analysis_progress.progress(40)
+                            analysis_status.text("🔍 Searching relevant content...")
+                            
                             # Search for relevant chunks
                             relevant_chunks = st.session_state.vector_search.search(user_query, k=3)
 
+                            analysis_progress.progress(70)
+                            analysis_status.text("🧠 Running AI analysis...")
+                            
                             # Get AI analysis based on selected method
                             if use_local_ai == "Local AI (No API key needed)":
                                 local_ai_client = LocalAIClient()
@@ -418,6 +517,9 @@ def main():
                                     relevant_chunks, 
                                     user_query
                                 )
+                            
+                            analysis_progress.progress(90)
+                            analysis_status.text("💾 Saving results...")
                             
                             # Save query and analysis to database
                             if db and st.session_state.current_document_id:
@@ -442,33 +544,65 @@ def main():
                                         processing_time=total_time
                                     )
                                 except Exception as db_error:
-                                    st.warning(f"Database save failed: {str(db_error)}")
+                                    st.warning(f"⚠️ Database save failed: {str(db_error)}")
+
+                            analysis_progress.progress(100)
+                            analysis_status.text("✅ Analysis complete!")
+                            
+                        # Clear progress indicators
+                        analysis_progress.empty()
+                        analysis_status.empty()
 
                         # Enhanced results display
                         st.markdown('<div class="results-section">', unsafe_allow_html=True)
                         st.markdown("## 📋 Analysis Results")
                         
-                        # Decision card with prominent styling
+                        # Validate analysis result
+                        if not analysis_result or not isinstance(analysis_result, dict):
+                            st.error("❌ Analysis failed - Invalid result format")
+                            analysis_result = {
+                                'decision': 'Error',
+                                'justification': 'Analysis could not be completed due to a system error.',
+                                'confidence': 'Low',
+                                'analysis_method': 'Error Handler'
+                            }
+                        
+                        # Ensure required fields exist
                         decision = analysis_result.get('decision', 'Unknown')
-                        decision_icon = "✅" if decision.lower() == 'approved' else "❌"
-                        decision_color = "#28a745" if decision.lower() == 'approved' else "#dc3545"
+                        justification = analysis_result.get('justification', 'No justification provided')
+                        confidence = analysis_result.get('confidence', 'Low')
+                        
+                        # Decision card with prominent styling
+                        decision_icon = "✅" if decision.lower() in ['approved', 'approve'] else "❌" if decision.lower() in ['rejected', 'reject', 'denied'] else "⏳"
+                        
+                        if decision.lower() in ['approved', 'approve']:
+                            decision_color = "#10b981"
+                            decision_class = "decision-approved"
+                        elif decision.lower() in ['rejected', 'reject', 'denied']:
+                            decision_color = "#ef4444"
+                            decision_class = "decision-rejected"
+                        else:
+                            decision_color = "#f59e0b"
+                            decision_class = "decision-review"
                         
                         st.markdown(f'''
-                        <div style="background-color: {decision_color}; color: white; padding: 1.5rem; border-radius: 10px; text-align: center; margin: 1rem 0;">
-                            <h2 style="margin: 0; font-size: 2rem;">{decision_icon} {decision}</h2>
-                            {f'<p style="margin: 0.5rem 0 0 0; font-size: 1.2rem;">Amount: {analysis_result["amount"]}</p>' if analysis_result.get('amount') else ''}
+                        <div class="{decision_class}">
+                            <h2 style="margin: 0; font-size: 2.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">{decision_icon} {decision}</h2>
+                            {f'<p style="margin: 0.75rem 0 0 0; font-size: 1.3rem; opacity: 0.95;">💰 Amount: {analysis_result["amount"]}</p>' if analysis_result.get('amount') else ''}
                         </div>
                         ''', unsafe_allow_html=True)
                         
                         # Extracted details in a clean layout
                         with st.expander("🔍 Extracted Query Details", expanded=True):
-                            if any(parsed_query.values()):
+                            if parsed_query and any(parsed_query.values()):
                                 col_a, col_b = st.columns(2)
                                 with col_a:
                                     if parsed_query.get('age'):
                                         st.markdown(f"**👤 Age:** {parsed_query['age']}")
                                     if parsed_query.get('gender'):
                                         st.markdown(f"**⚧ Gender:** {parsed_query['gender']}")
+                                    if parsed_query.get('query_type'):
+                                        st.markdown(f"**📋 Query Type:** {parsed_query['query_type']}")
                                 with col_b:
                                     if parsed_query.get('procedure'):
                                         st.markdown(f"**🏥 Procedure:** {parsed_query['procedure']}")
@@ -477,34 +611,63 @@ def main():
                                     if parsed_query.get('policy_duration'):
                                         st.markdown(f"**📅 Policy Duration:** {parsed_query['policy_duration']}")
                             else:
-                                st.info("No specific details extracted from query")
+                                st.info("ℹ️ No specific details extracted from query - analysis based on document content")
 
-                        # Justification and confidence
+                        # Justification and confidence with better error handling
                         col_just, col_conf = st.columns([3, 1])
                         with col_just:
                             st.markdown("**📝 Justification:**")
-                            st.write(analysis_result.get('justification', 'No justification provided'))
+                            if justification and justification.strip():
+                                st.write(justification)
+                            else:
+                                st.warning("⚠️ No justification provided by the analysis engine")
                         with col_conf:
-                            confidence = analysis_result.get('confidence', 'Medium')
                             conf_color = {"High": "🟢", "Medium": "🟡", "Low": "🔴"}.get(confidence, "🟡")
                             st.metric("Confidence", f"{conf_color} {confidence}")
                         
+                        # Additional analysis details
                         if analysis_result.get('clause_reference'):
                             st.markdown("**📚 Clause Reference:**")
                             st.info(analysis_result['clause_reference'])
+                        
+                        if analysis_result.get('risk_level'):
+                            risk_level = analysis_result['risk_level']
+                            risk_color = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}.get(risk_level, "🟡")
+                            st.markdown(f"**⚠️ Risk Level:** {risk_color} {risk_level}")
+                        
+                        # Recommendations and next steps
+                        if analysis_result.get('recommendations'):
+                            st.markdown("**💡 Recommendations:**")
+                            for i, rec in enumerate(analysis_result['recommendations'], 1):
+                                st.markdown(f"{i}. {rec}")
+                        
+                        if analysis_result.get('next_steps'):
+                            st.markdown("**📋 Next Steps:**")
+                            for i, step in enumerate(analysis_result['next_steps'], 1):
+                                st.markdown(f"{i}. {step}")
 
                         # Relevant sections with better formatting
                         with st.expander("📄 Supporting Document Sections", expanded=False):
-                            for i, chunk in enumerate(relevant_chunks, 1):
-                                st.markdown(f"**📖 Section {i}:**")
-                                preview = chunk[:400] + "..." if len(chunk) > 400 else chunk
-                                st.markdown(f'<div style="background-color: #f8f9fa; padding: 1rem; border-radius: 5px; border-left: 4px solid #007bff;">{preview}</div>', unsafe_allow_html=True)
-                                if i < len(relevant_chunks):
-                                    st.markdown("---")
+                            if relevant_chunks and len(relevant_chunks) > 0:
+                                for i, chunk in enumerate(relevant_chunks, 1):
+                                    st.markdown(f"**📖 Section {i}:**")
+                                    preview = chunk[:500] + "..." if len(chunk) > 500 else chunk
+                                    st.markdown(f'<div style="background-color: #f8f9fa; padding: 1.25rem; border-radius: 8px; border-left: 4px solid #2563eb; margin: 0.5rem 0;">{preview}</div>', unsafe_allow_html=True)
+                                    if i < len(relevant_chunks):
+                                        st.markdown("---")
+                            else:
+                                st.warning("⚠️ No relevant document sections found")
 
-                        # Technical details (collapsed by default)
+                        # Technical details (collapsed by default) with error handling
                         with st.expander("🔧 Technical Details", expanded=False):
-                            st.json(analysis_result)
+                            try:
+                                # Clean up the analysis result for display
+                                display_result = {k: v for k, v in analysis_result.items() if v is not None}
+                                st.json(display_result)
+                            except Exception as json_error:
+                                st.error(f"❌ Error displaying technical details: {str(json_error)}")
+                                st.write("Raw analysis result:")
+                                st.write(str(analysis_result))
                         
                         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -513,7 +676,7 @@ def main():
                 else:
                     st.warning("⚠️ Please enter a query to analyze")
 
-    # Enhanced Analytics and History Section
+    # Enhanced Analytics and History Section with better error handling
     st.markdown("---")
     st.markdown("## 📊 System Dashboard")
     
@@ -526,81 +689,93 @@ def main():
             
             with col_a1:
                 st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-                st.metric("📄 Documents", analytics['total_documents'])
+                st.metric("📄 Documents", analytics.get('total_documents', 0))
                 st.markdown('</div>', unsafe_allow_html=True)
             
             with col_a2:
                 st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-                st.metric("💬 Queries", analytics['total_queries'])
+                st.metric("💬 Queries", analytics.get('total_queries', 0))
                 st.markdown('</div>', unsafe_allow_html=True)
             
             with col_a3:
                 st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-                approval_rate = analytics['approval_rate']
+                approval_rate = analytics.get('approval_rate', 0)
                 st.metric("✅ Approval Rate", f"{approval_rate:.1f}%")
                 st.markdown('</div>', unsafe_allow_html=True)
             
             with col_a4:
                 st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-                st.metric("⚡ Avg Time", f"{analytics['average_processing_time']:.1f}s")
+                avg_time = analytics.get('average_processing_time', 0)
+                st.metric("⚡ Avg Time", f"{avg_time:.1f}s")
                 st.markdown('</div>', unsafe_allow_html=True)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # Decision breakdown
+            # Decision breakdown with error handling
             col_analytics, col_history = st.columns([1, 1], gap="large")
             
             with col_analytics:
                 st.markdown("### 📈 Decision Breakdown")
                 
-                approved = analytics['approved_decisions']
-                rejected = analytics['rejected_decisions']
+                approved = analytics.get('approved_decisions', 0)
+                rejected = analytics.get('rejected_decisions', 0)
                 
                 if approved + rejected > 0:
                     col_appr, col_rej = st.columns(2)
                     with col_appr:
                         st.markdown(f'''
-                        <div style="background-color: #d4edda; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <h3 style="margin: 0; color: #155724;">✅ {approved}</h3>
-                            <p style="margin: 0; color: #155724;">Approved</p>
+                        <div style="background: var(--gradient-success); color: white; padding: 1.25rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                            <h3 style="margin: 0; font-size: 1.8rem;">✅ {approved}</h3>
+                            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Approved</p>
                         </div>
                         ''', unsafe_allow_html=True)
                     with col_rej:
                         st.markdown(f'''
-                        <div style="background-color: #f8d7da; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <h3 style="margin: 0; color: #721c24;">❌ {rejected}</h3>
-                            <p style="margin: 0; color: #721c24;">Rejected</p>
+                        <div style="background: var(--gradient-danger); color: white; padding: 1.25rem; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                            <h3 style="margin: 0; font-size: 1.8rem;">❌ {rejected}</h3>
+                            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Rejected</p>
                         </div>
                         ''', unsafe_allow_html=True)
                 else:
-                    st.info("No decisions recorded yet")
+                    st.info("📊 No decisions recorded yet - start analyzing documents to see statistics")
             
             with col_history:
                 st.markdown("### 📝 Recent Activity")
-                history = db.get_query_history(limit=5)
-                if history:
-                    for i, record in enumerate(history):
-                        decision_icon = "✅" if record['decision'] == 'Approved' else "❌"
-                        time_str = record['timestamp'][:16].replace('T', ' ')
-                        
-                        st.markdown(f'''
-                        <div style="background-color: white; padding: 0.8rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 4px solid {'#28a745' if record['decision'] == 'Approved' else '#dc3545'};">
-                            <div style="display: flex; justify-content: between; align-items: center;">
-                                <strong>{decision_icon} {record['query'][:40]}...</strong>
+                try:
+                    history = db.get_query_history(limit=5)
+                    if history and len(history) > 0:
+                        for i, record in enumerate(history):
+                            decision_icon = "✅" if record.get('decision') == 'Approved' else "❌"
+                            decision_color = "#10b981" if record.get('decision') == 'Approved' else "#ef4444"
+                            time_str = record.get('timestamp', '')[:16].replace('T', ' ') if record.get('timestamp') else 'Unknown time'
+                            query_text = record.get('query', 'Unknown query')[:40] + "..." if len(record.get('query', '')) > 40 else record.get('query', 'Unknown query')
+                            doc_name = record.get('document', 'Unknown document')[:20] + "..." if len(record.get('document', '')) > 20 else record.get('document', 'Unknown document')
+                            
+                            st.markdown(f'''
+                            <div style="background: rgba(255, 255, 255, 0.9); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 4px solid {decision_color}; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1;">
+                                        <strong>{decision_icon} {query_text}</strong>
+                                        <br>
+                                        <small style="color: #64748b;">📄 {doc_name} • 🕒 {time_str}</small>
+                                    </div>
+                                </div>
                             </div>
-                            <small style="color: #6c757d;">📄 {record['document'][:20]}... • 🕒 {time_str}</small>
-                        </div>
-                        ''', unsafe_allow_html=True)
-                else:
-                    st.info("No query history available yet")
+                            ''', unsafe_allow_html=True)
+                    else:
+                        st.info("📝 No query history available yet - analyze some documents to see recent activity")
+                except Exception as history_error:
+                    st.warning(f"⚠️ Could not load query history: {str(history_error)}")
                     
-        except Exception as e:
-            st.error(f"Error loading dashboard data: {str(e)}")
+        except Exception as analytics_error:
+            st.error(f"❌ Error loading dashboard data: {str(analytics_error)}")
+            st.info("💡 Try uploading and analyzing a document to initialize the dashboard")
     else:
         st.markdown('''
-        <div style="background-color: #fff3cd; padding: 2rem; border-radius: 10px; text-align: center;">
-            <h3>📊 Dashboard Unavailable</h3>
-            <p>Database connection required for analytics and history features</p>
+        <div style="background: var(--gradient-warning); color: white; padding: 2.5rem; border-radius: 16px; text-align: center; box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);">
+            <h3 style="margin: 0 0 1rem 0;">📊 Dashboard Unavailable</h3>
+            <p style="margin: 0; opacity: 0.9;">Database connection required for analytics and history features</p>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">The app will still work for document analysis</p>
         </div>
         ''', unsafe_allow_html=True)
 

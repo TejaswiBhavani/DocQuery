@@ -1,5 +1,5 @@
 [theme]
-primaryColor = "#667eea"
+primaryColor = "#2563eb"
 backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#f8fafc"
 textColor = "#1a202c"
@@ -8,4 +8,13 @@ font = "sans serif"
 [server]
 headless = true
 address = "0.0.0.0"
-port = 5000
+port = 8080
+maxUploadSize = 200
+enableCORS = false
+
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"

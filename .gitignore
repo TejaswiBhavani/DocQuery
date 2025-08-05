@@ -64,3 +64,28 @@ repl_nix_workspace.egg-info/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Deployment artifacts
+uploads/
+*.pid
+
+# Local development
+.env.local
+.env.development
+.env.production
+
+# Model caches
+models/
+.cache/
+huggingface_cache/
+transformers_cache/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

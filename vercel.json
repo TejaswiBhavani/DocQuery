@@ -2,13 +2,16 @@
   "builds": [
     {
       "src": "app.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "250mb"
+      }
     }
   ],
   "functions": {
     "app.py": {
       "maxDuration": 30,
-      "memory": 3008,
+      "memory": 1024,
       "excludeFiles": [
         "**/*.pdf",
         "**/*.md",
@@ -21,7 +24,11 @@
         "**/start.sh",
         "**/setup.py",
         "**/.replit",
-        "**/replit.md"
+        "**/replit.md",
+        "**/database_manager_full.py",
+        "**/requirements-enhanced.txt",
+        "**/requirements-basic.txt",
+        "**/requirements-vercel.txt"
       ]
     }
   },
@@ -48,6 +55,8 @@
     }
   ],
   "env": {
-    "PORT": "8501"
+    "PORT": "8501",
+    "VERCEL": "1",
+    "FORCE_LIGHTWEIGHT_DB": "1"
   }
 }

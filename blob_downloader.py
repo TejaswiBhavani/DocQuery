@@ -28,6 +28,7 @@ class BlobDownloader:
     async def download_document(self, url: str) -> Tuple[str, str]:
         """
         Download document from URL and save to temporary file.
+        Supports HTTP/HTTPS URLs and local file:// URLs for testing.
         
         Args:
             url: Document URL to download
@@ -39,6 +40,10 @@ class BlobDownloader:
             Exception: If download fails or file is too large
         """
         try:
+            # Handle local file URLs for testing
+            if url.startswith('file://'):
+                return await self._handle_local_file(url)
+            
             # Parse URL to get filename
             parsed_url = urlparse(url)
             original_filename = self._extract_filename(url)
@@ -89,6 +94,56 @@ class BlobDownloader:
             if "temp_file_path" in locals() and os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)  # Clean up on error
             raise Exception(f"Error downloading document: {str(e)}")
+    
+    async def _handle_local_file(self, file_url: str) -> Tuple[str, str]:
+        """Handle local file:// URLs for testing."""
+        try:
+            # Extract file path from URL
+            file_path = file_url.replace('file://', '')
+            
+            if not os.path.exists(file_path):
+                raise Exception(f"Local file not found: {file_path}")
+            
+            # Check file size
+            file_size = os.path.getsize(file_path)
+            if file_size > self.max_size:
+                raise Exception(f"File too large: {file_size} bytes (max: {self.max_size})")
+            
+            # Get original filename
+            original_filename = os.path.basename(file_path)
+            
+            # Get file extension
+            file_extension = os.path.splitext(file_path)[1] or '.pdf'
+            
+            # Create temporary copy
+            temp_file = tempfile.NamedTemporaryFile(
+                delete=False, 
+                suffix=file_extension,
+                prefix="local_doc_"
+            )
+            temp_file_path = temp_file.name
+            temp_file.close()
+            
+            # Copy file content
+            async with aiofiles.open(file_path, 'rb') as src, aiofiles.open(temp_file_path, 'wb') as dst:
+                async for chunk in self._async_read_chunks(src):
+                    await dst.write(chunk)
+            
+            logger.info(f"Loaded local document: {original_filename} ({file_size} bytes)")
+            return temp_file_path, original_filename
+            
+        except Exception as e:
+            if "temp_file_path" in locals() and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+            raise Exception(f"Error loading local file: {str(e)}")
+    
+    async def _async_read_chunks(self, file_obj, chunk_size: int = 8192):
+        """Async generator to read file in chunks."""
+        while True:
+            chunk = await file_obj.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk
     
     def _extract_filename(self, url: str) -> str:
         """Extract filename from URL."""

@@ -1,5 +1,10 @@
-# Large PDF sample files - not needed for serverless function
+# Large PDF sample files - not needed for serverless function (now served from /public)
 *.pdf
+BAJHLIP23020V012223*.pdf
+CHOTGDP23004V012223.pdf
+EDLHLGA23009V012223.pdf
+HDFHLIP23024V072223.pdf
+ICIHLIP22012V012223.pdf
 
 # Python cache and build artifacts
 __pycache__/

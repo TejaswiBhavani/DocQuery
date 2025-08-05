@@ -68,7 +68,6 @@ Thumbs.db
 
 # Additional exclusions for size optimization
 attached_assets/
-public/
 .replit
 
 # Specific development/test files that should not be deployed

@@ -7,6 +7,22 @@
   ],
   "routes": [
     {
+      "src": "/documents/(.*\\.pdf)$",
+      "headers": { 
+        "Content-Type": "application/pdf",
+        "Cache-Control": "public, max-age=86400"
+      },
+      "dest": "/public/documents/$1"
+    },
+    {
+      "src": "/docs/(.*\\.md)$",
+      "headers": { 
+        "Content-Type": "text/markdown",
+        "Cache-Control": "public, max-age=86400"
+      },
+      "dest": "/public/docs/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "app.py"
     }

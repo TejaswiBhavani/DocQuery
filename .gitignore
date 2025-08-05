@@ -56,8 +56,8 @@ Thumbs.db
 # Vercel
 .vercel
 
-# Large files and development artifacts
-*.pdf
+# Large files and development artifacts - excluding root PDFs but allowing public/ PDFs
+/*.pdf
 uv.lock
 pyproject.toml
 repl_nix_workspace.egg-info/

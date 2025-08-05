@@ -1,0 +1,16 @@
+{
+  "name": "docquery",
+  "version": "1.0.0",
+  "description": "AI-Powered Document Analysis System",
+  "scripts": {
+    "build": "python build.py",
+    "start": "python index.py",
+    "dev": "streamlit run app.py"
+  },
+  "keywords": ["ai", "document", "analysis", "streamlit", "fastapi"],
+  "author": "TejaswiBhavani",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

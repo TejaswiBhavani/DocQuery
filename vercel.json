@@ -2,11 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.py",
-      "use": "@vercel/python",
+      "src": "package.json",
+      "use": "@vercel/static-build",
       "config": {
-        "maxLambdaSize": "50mb",
-        "runtime": "python3.12"
+        "distDir": "public"
       }
     },
     {
@@ -24,12 +23,8 @@
       "dest": "api.py"
     },
     {
-      "src": "/",
-      "dest": "index.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "index.py"
+      "dest": "/public/$1"
     }
   ],
   "env": {
@@ -40,9 +35,6 @@
     "VERCEL_DEPLOYMENT": "true"
   },
   "functions": {
-    "index.py": {
-      "maxDuration": 30
-    },
     "api.py": {
       "maxDuration": 30
     }

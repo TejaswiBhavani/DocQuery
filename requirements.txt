@@ -1,5 +1,5 @@
-# Basic DocQuery requirements
-# Install with: pip install -r requirements.txt
+# Minimal DocQuery requirements for Vercel deployment
+# Optimized to stay under 250MB limit
 
 streamlit>=1.47.0
 PyPDF2>=3.0.0

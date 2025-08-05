@@ -1,0 +1,28 @@
+{
+  "name": "docquery",
+  "version": "1.0.0",
+  "description": "AI-powered document analysis system built with Streamlit",
+  "main": "app.py",
+  "scripts": {
+    "build": "echo 'Build completed' && mkdir -p public && echo 'Static files ready'",
+    "start": "streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true",
+    "dev": "streamlit run app.py",
+    "install": "pip install -r requirements.txt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TejaswiBhavani/DocQuery"
+  },
+  "keywords": [
+    "ai",
+    "document-analysis",
+    "streamlit",
+    "machine-learning",
+    "nlp"
+  ],
+  "author": "TejaswiBhavani",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

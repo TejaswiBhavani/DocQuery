@@ -1,8 +1,9 @@
 {
   "version": 2,
+  "buildCommand": "python build.py --output public",
   "builds": [
     {
-      "src": "index.py",
+      "src": "api.py", 
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb",
@@ -10,39 +11,49 @@
       }
     },
     {
-      "src": "api.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "runtime": "python3.12"
-      }
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api.py"
+      "dest": "/api.py"
     },
     {
       "src": "/",
-      "dest": "index.py"
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/public/robots.txt"
+    },
+    {
+      "src": "/sitemap.xml", 
+      "dest": "/public/sitemap.xml"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/public/manifest.json"
+    },
+    {
+      "src": "/style.css",
+      "dest": "/public/style.css"
     },
     {
       "src": "/(.*)",
-      "dest": "index.py"
+      "dest": "/public/$1"
     }
   ],
   "env": {
-    "STREAMLIT_SERVER_HEADLESS": "true",
-    "STREAMLIT_SERVER_PORT": "8080",
-    "STREAMLIT_SERVER_ADDRESS": "0.0.0.0",
-    "STREAMLIT_BROWSER_GATHER_USAGE_STATS": "false",
-    "VERCEL_DEPLOYMENT": "true"
+    "VERCEL_DEPLOYMENT": "true",
+    "PYTHONPATH": "."
   },
   "functions": {
-    "index.py": {
-      "maxDuration": 30
-    },
     "api.py": {
       "maxDuration": 30
     }

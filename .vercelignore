@@ -61,3 +61,7 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Additional exclusions for size optimization
+attached_assets/
+public/

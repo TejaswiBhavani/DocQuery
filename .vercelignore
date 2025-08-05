@@ -65,3 +65,10 @@ Thumbs.db
 # Additional exclusions for size optimization
 attached_assets/
 public/
+.replit
+
+# Specific development/test files that should not be deployed
+test_deployment_size.py
+test_deployment_fixes.py
+test_vercel_deployment.py
+test_suite.py

@@ -1,9 +1,5 @@
-# Large PDF sample files in root - not needed for serverless function (now served from /public)
-/BAJHLIP23020V012223*.pdf
-/CHOTGDP23004V012223.pdf
-/EDLHLGA23009V012223.pdf
-/HDFHLIP23024V072223.pdf
-/ICIHLIP22012V012223.pdf
+# Large PDF sample files - served from /public as static assets
+*.pdf
 
 # Python cache and build artifacts
 __pycache__/
@@ -22,11 +18,8 @@ replit.md
 .replit
 repl_nix_workspace.egg-info/
 
-# Documentation and readme files
+# Documentation and readme files (served from /public/docs)
 *.md
-ENHANCEMENT_SUMMARY.md
-DEPLOYMENT.md
-VERCEL_FIXES_SUMMARY.md
 
 # Sample and template files
 sample_*.txt
@@ -68,11 +61,13 @@ Thumbs.db
 
 # Additional exclusions for size optimization
 attached_assets/
-public/
 .replit
 
-# Specific development/test files that should not be deployed
-test_deployment_size.py
-test_deployment_fixes.py
-test_vercel_deployment.py
-test_suite.py
+# Node modules if any
+node_modules/
+
+# Python virtual environment
+venv/
+env/
+.venv/
+.env/

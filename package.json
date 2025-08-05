@@ -4,10 +4,12 @@
   "description": "AI-powered document analysis system built with Streamlit",
   "main": "app.py",
   "scripts": {
-    "build": "echo 'Build completed' && mkdir -p public && echo 'Static files ready'",
+    "build": "vercel build",
+    "dev-build": "echo 'Development build completed' && mkdir -p public && echo 'Static files ready'",
     "start": "streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless=true",
     "dev": "streamlit run app.py",
-    "install": "pip install -r requirements.txt"
+    "install": "pip install -r requirements.txt",
+    "check-size": "du -sh .vercel/output/functions 2>/dev/null || echo 'No build output found. Run build first.'"
   },
   "repository": {
     "type": "git",

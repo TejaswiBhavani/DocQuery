@@ -1,0 +1,15 @@
+# Vercel-optimized requirements for DocQuery
+# Ultra-minimal dependencies to stay under 250MB serverless function limit
+
+streamlit>=1.47.0
+PyPDF2>=3.0.0
+numpy>=1.24.0
+openai>=1.97.1
+
+# Lightweight alternatives for database and text processing
+sqlite3  # Built-in Python module - no additional size
+python-docx>=0.8.11
+requests>=2.28.0
+
+# Ultra-light text processing instead of heavy ML libraries
+# Using simple TF-IDF and text similarity instead of transformers

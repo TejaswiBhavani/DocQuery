@@ -5,6 +5,26 @@
       "use": "@vercel/python"
     }
   ],
+  "functions": {
+    "app.py": {
+      "maxDuration": 30,
+      "memory": 3008,
+      "excludeFiles": [
+        "**/*.pdf",
+        "**/*.md",
+        "**/public/**",
+        "**/attached_assets/**",
+        "**/test_*.py",
+        "**/*_test.py",
+        "**/sample_*.txt",
+        "**/style.css",
+        "**/start.sh",
+        "**/setup.py",
+        "**/.replit",
+        "**/replit.md"
+      ]
+    }
+  },
   "routes": [
     {
       "src": "/documents/(.*\\.pdf)$",

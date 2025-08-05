@@ -55,3 +55,12 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Large files and development artifacts
+*.pdf
+uv.lock
+pyproject.toml
+repl_nix_workspace.egg-info/
+
+# Streamlit
+.streamlit/secrets.toml

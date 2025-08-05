@@ -20,6 +20,14 @@ from document_processor import DocumentProcessor
 from batch_processor import BatchProcessor
 from output_formatter import OutputFormatter
 
+# Import Vercel error handler
+try:
+    from vercel_error_handler import vercel_error_handler
+    VERCEL_SUPPORT = True
+except ImportError:
+    VERCEL_SUPPORT = False
+    vercel_error_handler = None
+
 # Try to import vector search with fallbacks
 try:
     from vector_search import VectorSearch
@@ -149,16 +157,16 @@ async def process_document_queries(
         
         # Validate input
         if not request.documents or not request.documents.strip():
-            raise HTTPException(
-                status_code=400,
-                detail="Document URL is required"
-            )
+            if VERCEL_SUPPORT and vercel_error_handler:
+                raise vercel_error_handler.create_http_exception("INVALID_REQUEST_METHOD", "Document URL is required")
+            else:
+                raise HTTPException(status_code=400, detail="Document URL is required")
         
         if not request.questions or len(request.questions) == 0:
-            raise HTTPException(
-                status_code=400,
-                detail="At least one question is required"
-            )
+            if VERCEL_SUPPORT and vercel_error_handler:
+                raise vercel_error_handler.create_http_exception("INVALID_REQUEST_METHOD", "At least one question is required")
+            else:
+                raise HTTPException(status_code=400, detail="At least one question is required")
         
         # Step 1: Download document
         logger.info(f"Downloading document from: {request.documents}")
@@ -168,10 +176,15 @@ async def process_document_queries(
             temp_file_path, original_filename = await blob_downloader.download_document(request.documents)
             logger.info(f"Downloaded document: {original_filename}")
         except Exception as e:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Failed to download document: {str(e)}"
-            )
+            if VERCEL_SUPPORT and vercel_error_handler:
+                if "timeout" in str(e).lower():
+                    raise vercel_error_handler.create_http_exception("FUNCTION_INVOCATION_TIMEOUT", f"Document download timed out: {str(e)}")
+                elif "too large" in str(e).lower():
+                    raise vercel_error_handler.create_http_exception("FUNCTION_PAYLOAD_TOO_LARGE", f"Document too large: {str(e)}")
+                else:
+                    raise vercel_error_handler.create_http_exception("FUNCTION_INVOCATION_FAILED", f"Failed to download document: {str(e)}")
+            else:
+                raise HTTPException(status_code=400, detail=f"Failed to download document: {str(e)}")
         
         # Step 2: Extract text from document
         logger.info("Extracting text from document...")
@@ -180,20 +193,23 @@ async def process_document_queries(
         try:
             text_content = document_processor.extract_text(temp_file_path)
             if not text_content or len(text_content.strip()) < 100:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Document appears to be empty or too short"
-                )
+                if VERCEL_SUPPORT and vercel_error_handler:
+                    raise vercel_error_handler.create_http_exception("RESOURCE_NOT_FOUND", "Document appears to be empty or too short")
+                else:
+                    raise HTTPException(status_code=400, detail="Document appears to be empty or too short")
             
             # Chunk the text
             document_chunks = document_processor.chunk_text(text_content)
             logger.info(f"Created {len(document_chunks)} text chunks")
             
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to process document: {str(e)}"
-            )
+            if VERCEL_SUPPORT and vercel_error_handler:
+                if "timeout" in str(e).lower():
+                    raise vercel_error_handler.create_http_exception("FUNCTION_INVOCATION_TIMEOUT", f"Document processing timed out: {str(e)}")
+                else:
+                    raise vercel_error_handler.create_http_exception("FUNCTION_INVOCATION_FAILED", f"Failed to process document: {str(e)}")
+            else:
+                raise HTTPException(status_code=500, detail=f"Failed to process document: {str(e)}")
         
         # Step 3: Build search index with intelligent fallback
         logger.info("Building search index...")
@@ -224,10 +240,16 @@ async def process_document_queries(
                     search_method_used = "Simple text search"
                     logger.info("Simple search index built successfully")
                 except Exception as simple_error:
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"All search methods failed. Advanced: {str(e)[:50]}, Enhanced: {str(enhanced_error)[:50]}, Simple: {str(simple_error)[:50]}"
-                    )
+                    if VERCEL_SUPPORT and vercel_error_handler:
+                        raise vercel_error_handler.create_http_exception(
+                            "FUNCTION_INVOCATION_FAILED", 
+                            f"All search methods failed. Advanced: {str(e)[:50]}, Enhanced: {str(enhanced_error)[:50]}, Simple: {str(simple_error)[:50]}"
+                        )
+                    else:
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"All search methods failed. Advanced: {str(e)[:50]}, Enhanced: {str(enhanced_error)[:50]}, Simple: {str(simple_error)[:50]}"
+                        )
         
         # Step 4: Process questions
         logger.info(f"Processing {len(request.questions)} questions...")
@@ -248,10 +270,13 @@ async def process_document_queries(
             logger.info("All questions processed successfully")
             
         except Exception as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to process questions: {str(e)}"
-            )
+            if VERCEL_SUPPORT and vercel_error_handler:
+                if "timeout" in str(e).lower():
+                    raise vercel_error_handler.create_http_exception("FUNCTION_INVOCATION_TIMEOUT", f"Question processing timed out: {str(e)}")
+                else:
+                    raise vercel_error_handler.create_http_exception("FUNCTION_INVOCATION_FAILED", f"Failed to process questions: {str(e)}")
+            else:
+                raise HTTPException(status_code=500, detail=f"Failed to process questions: {str(e)}")
         
         # Step 5: Format and return response
         processing_time = time.time() - start_time
@@ -264,10 +289,15 @@ async def process_document_queries(
         raise
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        
+        # Use Vercel error handler if available
+        if VERCEL_SUPPORT and vercel_error_handler:
+            return vercel_error_handler.handle_application_error(e, "document_processing")
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Internal server error: {str(e)}"
+            )
     
     finally:
         # Cleanup temporary file
@@ -363,6 +393,74 @@ async def api_status():
             "/docs": "API documentation"
         }
     }
+
+@app.get("/api/v1/vercel/status")
+async def vercel_status():
+    """Get Vercel deployment status and error handling capabilities."""
+    vercel_env = os.getenv('VERCEL_DEPLOYMENT') == 'true' or os.getenv('VERCEL') == '1'
+    
+    response_data = {
+        "vercel_deployment": vercel_env,
+        "vercel_support": VERCEL_SUPPORT,
+        "environment": {
+            "vercel_env": os.getenv('VERCEL_ENV', 'unknown'),
+            "vercel_region": os.getenv('VERCEL_REGION', 'unknown'),
+            "vercel_url": os.getenv('VERCEL_URL', 'unknown'),
+            "branch": os.getenv('VERCEL_GIT_COMMIT_REF', 'unknown'),
+            "commit": os.getenv('VERCEL_GIT_COMMIT_SHA', 'unknown')[:8] if os.getenv('VERCEL_GIT_COMMIT_SHA') else 'unknown'
+        },
+        "error_handling": {
+            "application_errors": len(vercel_error_handler.get_all_errors()) if VERCEL_SUPPORT else 0,
+            "platform_errors": "All platform errors handled" if VERCEL_SUPPORT else "Limited",
+            "supported_categories": ["Function", "Deployment", "DNS", "Cache", "Image", "Request", "Routing", "Runtime", "Internal"] if VERCEL_SUPPORT else []
+        },
+        "limits": {
+            "function_timeout": "10s (Hobby), 60s (Pro)",
+            "payload_size": "5MB",
+            "memory": "1GB",
+            "execution_duration": "30s max per request"
+        }
+    }
+    
+    return response_data
+
+@app.get("/api/v1/vercel/errors")
+async def vercel_error_codes():
+    """Get all supported Vercel error codes."""
+    if not VERCEL_SUPPORT:
+        raise HTTPException(status_code=501, detail="Vercel error handling not available")
+    
+    error_codes = vercel_error_handler.get_all_errors()
+    categorized_errors = {}
+    
+    for code, info in error_codes.items():
+        category = info["category"].value
+        if category not in categorized_errors:
+            categorized_errors[category] = []
+        
+        categorized_errors[category].append({
+            "code": code,
+            "status": info["status"],
+            "category": category
+        })
+    
+    return {
+        "total_errors": len(error_codes),
+        "categories": categorized_errors,
+        "documentation": "See Vercel documentation for detailed error descriptions"
+    }
+
+@app.post("/api/v1/vercel/test-error")
+async def test_vercel_error(error_code: str):
+    """Test endpoint for Vercel error handling."""
+    if not VERCEL_SUPPORT:
+        raise HTTPException(status_code=501, detail="Vercel error handling not available")
+    
+    if not vercel_error_handler.is_vercel_error(error_code):
+        raise HTTPException(status_code=400, detail=f"Unknown Vercel error code: {error_code}")
+    
+    # Create a test error response
+    raise vercel_error_handler.create_http_exception(error_code, f"Test error for code: {error_code}")
 
 # Development server function
 def run_server(host: str = "0.0.0.0", port: int = 8000, reload: bool = False):

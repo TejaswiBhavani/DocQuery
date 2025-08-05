@@ -56,6 +56,19 @@ If you must use Vercel, use the FastAPI backend instead:
 1. **`vercel.json`** - Vercel configuration
 2. **`index.py`** - Entry point with deployment instructions
 3. **`requirements-vercel.txt`** - Minimal dependencies for Vercel
+4. **`vercel_error_handler.py`** - Comprehensive Vercel error handling (71+ error codes)
+5. **`VERCEL_ERROR_HANDLING.md`** - Complete error handling documentation
+
+### 🚀 Enhanced Error Handling
+
+DocQuery now includes comprehensive error handling for all Vercel error codes:
+- **71+ error codes** supported across 9 categories
+- **Automatic error detection** and mapping
+- **Intelligent suggestions** for error resolution
+- **Environment-aware** troubleshooting
+- **Complete API coverage** for error testing and status
+
+See [VERCEL_ERROR_HANDLING.md](VERCEL_ERROR_HANDLING.md) for complete documentation.
 
 ### 🚀 Quick Fix Implementation
 

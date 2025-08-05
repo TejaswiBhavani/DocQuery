@@ -1,13 +1,23 @@
 """
 Enhanced error handling and user experience improvements for DocQuery.
 Provides better error messages and graceful fallbacks.
+Includes Vercel-specific error handling for deployment scenarios.
 """
 
 import streamlit as st
 import logging
 import traceback
+import os
 from typing import Optional, Any, Dict
 from dependency_checker import DependencyChecker
+
+# Import Vercel error handler if FastAPI is available
+try:
+    from vercel_error_handler import vercel_error_handler, VercelErrorCategory
+    VERCEL_SUPPORT = True
+except ImportError:
+    VERCEL_SUPPORT = False
+    vercel_error_handler = None
 
 class DocQueryErrorHandler:
     """Centralized error handling for better user experience."""
@@ -120,7 +130,111 @@ class DocQueryErrorHandler:
         
         self.logger.error(f"AI analysis error for query '{query[:50]}...': {error}")
     
-    def handle_database_error(self, error: Exception) -> None:
+    def handle_vercel_deployment_error(self, error: Exception) -> None:
+        """Handle Vercel deployment and runtime errors with specific guidance."""
+        if not VERCEL_SUPPORT:
+            self.handle_general_deployment_error(error)
+            return
+            
+        error_msg = str(error).lower()
+        
+        # Check if this looks like a Vercel error
+        is_vercel_env = os.getenv('VERCEL_DEPLOYMENT') == 'true' or os.getenv('VERCEL') == '1'
+        
+        if is_vercel_env:
+            st.error("🔧 **Vercel Deployment Error**")
+            
+            # Common Vercel deployment issues
+            if 'timeout' in error_msg:
+                st.warning("**Function Timeout Detected**")
+                st.info("""
+                **Vercel Function Timeout Solutions:**
+                1. Optimize document processing for faster execution
+                2. Break down large operations into smaller chunks
+                3. Consider using streaming responses for large documents
+                4. Check for infinite loops in processing logic
+                
+                **Current limits**: 10s (Hobby), 60s (Pro)
+                """)
+            elif 'payload too large' in error_msg or 'entity too large' in error_msg:
+                st.warning("**Payload Size Limit Exceeded**")
+                st.info("""
+                **Solutions for large payloads:**
+                1. Reduce document size before upload
+                2. Use file chunking for large documents
+                3. Compress documents before processing
+                4. Consider using external storage (S3, etc.)
+                
+                **Current limit**: 5MB for serverless functions
+                """)
+            elif 'deployment not found' in error_msg:
+                st.warning("**Deployment Not Found**")
+                st.info("""
+                **Deployment issues:**
+                1. Check if deployment was successful
+                2. Verify the correct domain/URL
+                3. Check Vercel dashboard for deployment status
+                4. Try redeploying the application
+                """)
+            elif 'function invocation failed' in error_msg:
+                st.warning("**Function Execution Failed**")
+                st.info("""
+                **Function execution issues:**
+                1. Check function logs in Vercel dashboard
+                2. Verify all dependencies are properly installed
+                3. Test function locally before deployment
+                4. Check memory and CPU usage limits
+                """)
+            else:
+                st.warning(f"**Vercel Error**: {str(error)}")
+                st.info("""
+                **General Vercel troubleshooting:**
+                1. Check Vercel dashboard for detailed logs
+                2. Verify environment variables are set correctly
+                3. Ensure all dependencies are in requirements.txt
+                4. Try redeploying with latest changes
+                """)
+            
+            # Show Vercel-specific debugging info
+            with st.expander("🔍 Vercel Debugging Info", expanded=False):
+                st.code(f"""
+                Environment: {os.getenv('VERCEL_ENV', 'unknown')}
+                Region: {os.getenv('VERCEL_REGION', 'unknown')}
+                URL: {os.getenv('VERCEL_URL', 'unknown')}
+                Function: {os.getenv('AWS_LAMBDA_FUNCTION_NAME', 'N/A')}
+                Runtime: {os.getenv('AWS_EXECUTION_ENV', 'unknown')}
+                """)
+        else:
+            self.handle_general_deployment_error(error)
+        
+        self.logger.error(f"Vercel deployment error: {error}")
+    
+    def handle_general_deployment_error(self, error: Exception) -> None:
+        """Handle general deployment errors when not on Vercel."""
+        st.error("🚀 **Deployment Error**")
+        st.warning(f"Technical details: {str(error)}")
+        st.info("""
+        **Alternative deployment platforms:**
+        1. **Heroku**: Great for Streamlit apps (`git push heroku main`)
+        2. **Railway**: Easy GitHub integration
+        3. **Render**: Free tier with GitHub connection
+        4. **Streamlit Cloud**: Designed for Streamlit apps
+        
+        **For Vercel users**: See VERCEL_FIX.md for detailed guidance
+        """)
+    
+    def check_vercel_environment(self) -> Dict[str, Any]:
+        """Check if running in Vercel environment and return status."""
+        vercel_info = {
+            'is_vercel': os.getenv('VERCEL_DEPLOYMENT') == 'true' or os.getenv('VERCEL') == '1',
+            'environment': os.getenv('VERCEL_ENV', 'unknown'),
+            'region': os.getenv('VERCEL_REGION', 'unknown'),
+            'url': os.getenv('VERCEL_URL', 'unknown'),
+            'branch': os.getenv('VERCEL_GIT_COMMIT_REF', 'unknown'),
+            'commit': os.getenv('VERCEL_GIT_COMMIT_SHA', 'unknown')[:8] if os.getenv('VERCEL_GIT_COMMIT_SHA') else 'unknown'
+        }
+        
+        return vercel_info
         """Handle database connection and operation errors."""
         st.warning("💾 **Database Connection Issue**")
         st.info("""
@@ -163,6 +277,21 @@ class DocQueryErrorHandler:
         """Display system status and capabilities in sidebar."""
         with st.sidebar:
             st.markdown("### 🔧 System Status")
+            
+            # Show system status including Vercel info
+            vercel_info = self.check_vercel_environment()
+            if vercel_info['is_vercel']:
+                st.markdown("### 🔧 Vercel Deployment Status")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Environment", vercel_info['environment'])
+                    st.metric("Region", vercel_info['region'])
+                with col2:
+                    st.metric("Branch", vercel_info['branch'])
+                    st.metric("Commit", vercel_info['commit'])
+                
+                if vercel_info['url'] != 'unknown':
+                    st.info(f"🌐 Deployment URL: {vercel_info['url']}")
             
             capabilities = self.dependency_checker.get_capabilities_summary()
             

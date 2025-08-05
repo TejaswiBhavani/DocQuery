@@ -313,8 +313,14 @@ class LocalAIClient:
         return 0
     
     def _generate_justification(self, decision: str, parsed_query: Dict, text: str, factors: Dict) -> str:
-        """Generate human-readable justification."""
+        """Generate human-readable justification with specific document content."""
         
+        # First try to extract specific answers from the text
+        specific_answer = self._extract_specific_document_answer(text, parsed_query)
+        if specific_answer:
+            return specific_answer
+        
+        # Fallback to factor-based justification
         justification_parts = []
         
         # Decision-specific opening
@@ -325,23 +331,23 @@ class LocalAIClient:
         else:
             justification_parts.append("The claim requires additional review based on the available information.")
         
-        # Add specific factors
-        if factors["age_factor"] > 0:
+        # Add specific factors if available
+        if factors.get("age_factor", 0) > 0:
             justification_parts.append("Age requirements are satisfied.")
-        elif factors["age_factor"] < 0:
+        elif factors.get("age_factor", 0) < 0:
             justification_parts.append("Age-related restrictions may apply.")
         
-        if factors["procedure_factor"] > 0:
+        if factors.get("procedure_factor", 0) > 0:
             justification_parts.append("The requested procedure appears to be covered under the policy.")
-        elif factors["procedure_factor"] < 0:
+        elif factors.get("procedure_factor", 0) < 0:
             justification_parts.append("The requested procedure may be excluded or restricted.")
         
-        if factors["location_factor"] > 0:
+        if factors.get("location_factor", 0) > 0:
             justification_parts.append("The treatment location is within the covered network.")
         
-        if factors["policy_factor"] > 0:
+        if factors.get("policy_factor", 0) > 0:
             justification_parts.append("Policy duration requirements are met.")
-        elif factors["policy_factor"] < 0:
+        elif factors.get("policy_factor", 0) < 0:
             justification_parts.append("Policy may still be within a waiting period.")
         
         # Add summary
@@ -349,6 +355,106 @@ class LocalAIClient:
             justification_parts.append("Please review the complete policy terms for detailed coverage information.")
         
         return " ".join(justification_parts)
+    
+    def _extract_specific_document_answer(self, text: str, parsed_query: Dict) -> Optional[str]:
+        """Extract specific answers directly from document text."""
+        if not text or len(text.strip()) < 100:
+            return None
+        
+        text_lower = text.lower()
+        
+        # Define specific question patterns and extraction rules
+        extraction_rules = [
+            {
+                "keywords": ["waiting period", "wait", "months", "days"],
+                "patterns": [
+                    r"waiting period[^.]*?(\d+)\s*(months?|days?|years?)[^.]*?\.",
+                    r"(\d+)\s*(months?|days?|years?)[^.]*?waiting period[^.]*?\.",
+                    r"wait[^.]*?(\d+)\s*(months?|days?|years?)[^.]*?\."
+                ],
+                "context_size": 150
+            },
+            {
+                "keywords": ["grace period", "premium", "payment"],
+                "patterns": [
+                    r"grace period[^.]*?(\d+)\s*(days?|months?)[^.]*?\.",
+                    r"(\d+)\s*(days?|months?)[^.]*?grace period[^.]*?\."
+                ],
+                "context_size": 120
+            },
+            {
+                "keywords": ["maternity", "pregnancy", "childbirth"],
+                "patterns": [
+                    r"maternity[^.]{20,300}\.",
+                    r"pregnancy[^.]{20,200}\.",
+                    r"childbirth[^.]{20,200}\."
+                ],
+                "context_size": 200
+            },
+            {
+                "keywords": ["pre-existing", "pre existing", "ped"],
+                "patterns": [
+                    r"pre-existing[^.]{20,300}\.",
+                    r"pre existing[^.]{20,300}\."
+                ],
+                "context_size": 200
+            },
+            {
+                "keywords": ["room rent", "daily room", "icu"],
+                "patterns": [
+                    r"room rent[^.]{20,200}\.",
+                    r"daily room[^.]{20,200}\.",
+                    r"icu[^.]{20,200}\."
+                ],
+                "context_size": 150
+            },
+            {
+                "keywords": ["hospital", "definition", "means"],
+                "patterns": [
+                    r"hospital[^.]{50,400}\.",
+                    r"hospital.*?means[^.]{20,300}\."
+                ],
+                "context_size": 250
+            }
+        ]
+        
+        # Check each extraction rule
+        for rule in extraction_rules:
+            # Check if any keywords are present
+            if any(keyword in text_lower for keyword in rule["keywords"]):
+                # Try each pattern
+                for pattern in rule["patterns"]:
+                    matches = list(re.finditer(pattern, text_lower, re.IGNORECASE | re.DOTALL))
+                    
+                    if matches:
+                        # Get the best match (longest one)
+                        best_match = max(matches, key=lambda m: len(m.group(0)))
+                        
+                        # Extract context around the match
+                        start = max(0, best_match.start() - rule["context_size"])
+                        end = min(len(text), best_match.end() + rule["context_size"])
+                        context = text[start:end].strip()
+                        
+                        # Clean up the context to get complete sentences
+                        sentences = re.split(r'[.!?]', context)
+                        
+                        # Find the sentence containing the match
+                        match_text = best_match.group(0)
+                        relevant_sentences = []
+                        
+                        for sentence in sentences:
+                            if any(keyword in sentence.lower() for keyword in rule["keywords"]):
+                                clean_sentence = sentence.strip()
+                                if len(clean_sentence) > 20:  # Ensure meaningful content
+                                    relevant_sentences.append(clean_sentence)
+                        
+                        if relevant_sentences:
+                            # Return the most informative sentence
+                            best_sentence = max(relevant_sentences, key=len)
+                            if len(best_sentence) > 30:
+                                return best_sentence + "."
+        
+        return None
     
     def _extract_amount(self, text: str) -> Optional[str]:
         """Extract monetary amounts from text."""

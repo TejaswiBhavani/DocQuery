@@ -114,17 +114,17 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Security(secu
     return credentials.credentials
 
 # API Endpoints
-@app.get("/", response_model=Dict[str, str])
+@app.get("/api/", response_model=Dict[str, str])
 async def root():
     """Root endpoint."""
     return {
         "message": "DocQuery API - LLM-Powered Intelligent Query-Retrieval System",
         "status": "active",
-        "docs_url": "/docs",
+        "docs_url": "/api/docs",
         "api_version": "v1"
     }
 
-@app.get("/health", response_model=HealthResponse)
+@app.get("/api/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint."""
     return HealthResponse(

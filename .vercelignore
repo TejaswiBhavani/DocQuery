@@ -1,0 +1,63 @@
+# Large PDF sample files - not needed for serverless function
+*.pdf
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Development and testing files
+test_*.py
+*_test.py
+replit.md
+.replit
+repl_nix_workspace.egg-info/
+
+# Documentation and readme files
+*.md
+ENHANCEMENT_SUMMARY.md
+DEPLOYMENT.md
+VERCEL_FIXES_SUMMARY.md
+
+# Sample and template files
+sample_*.txt
+
+# Lock files and package metadata (use requirements.txt instead)
+uv.lock
+pyproject.toml
+
+# Development dependencies not needed for production
+requirements-enhanced.txt
+requirements-basic.txt
+
+# Static assets and development files
+style.css
+start.sh
+setup.py
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Vercel
+.vercel

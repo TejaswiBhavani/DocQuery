@@ -1,5 +1,5 @@
-# Minimal DocQuery requirements for Vercel deployment
-# Optimized to stay under 250MB limit
+# DocQuery requirements with FastAPI support
+# Optimized for both Streamlit UI and REST API
 
 streamlit>=1.47.0
 PyPDF2>=3.0.0
@@ -8,3 +8,17 @@ scikit-learn>=1.3.0
 psycopg2-binary>=2.9.0
 sqlalchemy>=2.0.0
 openai>=1.97.1
+
+# FastAPI dependencies
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+aiofiles>=23.2.0
+httpx>=0.25.0
+
+# Enhanced search capabilities
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.0
+
+# Document processing
+python-docx>=0.8.11

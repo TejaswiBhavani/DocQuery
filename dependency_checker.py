@@ -30,13 +30,13 @@ class DependencyChecker:
                 'features': ['Local AI sentiment analysis', 'Text summarization', 'Advanced NLP'],
                 'fallback': 'Rule-based text analysis'
             },
-            'sentence-transformers': {
+            'sentence_transformers': {  # Fixed import name
                 'description': 'Semantic text embeddings for better search',
                 'install_command': 'pip install sentence-transformers',
                 'features': ['Semantic search', 'Better document similarity', 'Context-aware matching'],
                 'fallback': 'TF-IDF text search'
             },
-            'faiss-cpu': {
+            'faiss': {  # Fixed import name
                 'description': 'Fast approximate nearest neighbor search',
                 'install_command': 'pip install faiss-cpu',
                 'features': ['Faster vector search', 'Scalable document indexing', 'Improved performance'],

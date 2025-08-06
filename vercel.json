@@ -3,11 +3,11 @@
   "builds": [
     {
       "src": "api.py",
-      "use": "@vercel/python@4.3.0"
+      "use": "@vercel/python"
     },
     {
       "src": "public/**",
-      "use": "@vercel/static@3.0.0"
+      "use": "@vercel/static"
     }
   ],
   "routes": [

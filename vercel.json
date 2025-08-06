@@ -1,47 +1,22 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+  "functions": {
+    "api.py": {
+      "runtime": "@vercel/python"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api.py"
+      "source": "/api/(.*)",
+      "destination": "/api.py"
     },
     {
-      "src": "/robots.txt",
-      "dest": "/public/robots.txt"
+      "source": "/",
+      "destination": "/public/index.html"
     },
     {
-      "src": "/sitemap.xml", 
-      "dest": "/public/sitemap.xml"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/public/manifest.json"
-    },
-    {
-      "src": "/style.css",
-      "dest": "/public/style.css"
-    },
-    {
-      "src": "/",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "source": "/((?!api|public).*)",
+      "destination": "/public/$1"
     }
   ],
   "headers": [

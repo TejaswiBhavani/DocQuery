@@ -64,6 +64,7 @@ demo_*.py
 sample_*.txt
 test_suite.py
 verify_deployment.py
+vercel_build_check.py
 
 # Shell scripts (not needed for Vercel)
 *.sh

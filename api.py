@@ -483,4 +483,5 @@ if __name__ == "__main__":
 
 # Vercel serverless function handler
 # This exports the app for Vercel to use
+handler = app
 app = app

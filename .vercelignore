@@ -1,0 +1,62 @@
+# Vercel ignore file
+# Exclude files that shouldn't be deployed
+
+# Development files
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentation (keep only essential)
+IMPLEMENTATION_SUMMARY.md
+VERCEL_FIX.md
+VERCEL_DEPLOYMENT_FIXED.md
+VERCEL_ERROR_HANDLING.md
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Local development
+.env.local
+.env.development
+.env.test
+
+# Build artifacts that shouldn't be uploaded
+dist/
+build/
+
+# Docker files (not needed for Vercel)
+Dockerfile
+docker-compose.yml
+
+# Heroku specific files (not needed for Vercel)
+Procfile
+
+# Streamlit specific (since we're using API-only approach on Vercel)
+.streamlit/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db

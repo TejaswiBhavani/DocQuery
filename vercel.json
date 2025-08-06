@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "python build.py --output public",
   "builds": [
     {
       "src": "api.py", 

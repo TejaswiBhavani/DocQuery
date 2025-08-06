@@ -1,22 +1,27 @@
 {
   "version": 2,
-  "functions": {
-    "api.py": {
-      "runtime": "@vercel/python@4.x"
+  "builds": [
+    {
+      "src": "api.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
-  },
-  "rewrites": [
+  ],
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api.py"
+      "src": "/api/(.*)",
+      "dest": "/api.py"
     },
     {
-      "source": "/",
-      "destination": "/public/index.html"
+      "src": "/",
+      "dest": "/public/index.html"
     },
     {
-      "source": "/((?!api|public).*)",
-      "destination": "/public/$1"
+      "src": "/((?!api|public).*)",
+      "dest": "/public/$1"
     }
   ],
   "headers": [

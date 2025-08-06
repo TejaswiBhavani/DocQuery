@@ -1,39 +1,47 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "public",
-  "functions": {
-    "api.py": {
-      "runtime": "python3.12",
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api.py"
+      "src": "api.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
-  "redirects": [
+  "routes": [
     {
-      "source": "/robots.txt",
-      "destination": "/public/robots.txt"
+      "src": "/api/(.*)",
+      "dest": "/api.py"
     },
     {
-      "source": "/sitemap.xml", 
-      "destination": "/public/sitemap.xml"
+      "src": "/robots.txt",
+      "dest": "/public/robots.txt"
     },
     {
-      "source": "/favicon.ico",
-      "destination": "/public/favicon.ico"
+      "src": "/sitemap.xml", 
+      "dest": "/public/sitemap.xml"
     },
     {
-      "source": "/manifest.json",
-      "destination": "/public/manifest.json"
+      "src": "/favicon.ico",
+      "dest": "/public/favicon.ico"
     },
     {
-      "source": "/style.css",
-      "destination": "/public/style.css"
+      "src": "/manifest.json",
+      "dest": "/public/manifest.json"
+    },
+    {
+      "src": "/style.css",
+      "dest": "/public/style.css"
+    },
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
     }
   ],
   "headers": [

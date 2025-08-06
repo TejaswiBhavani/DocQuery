@@ -104,7 +104,7 @@ def check_vercel_json():
         for build in config["builds"]:
             if build.get("use") == "@vercel/static":
                 has_static_build = True
-            if build.get("use") == "@vercel/python":
+            if build.get("use", "").startswith("@vercel/python"):
                 has_python_build = True
         
         if not has_static_build:

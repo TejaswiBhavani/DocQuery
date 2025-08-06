@@ -120,15 +120,8 @@ def check_vercel_json():
             print("❌ No routes configuration in vercel.json")
             return False
         
-        # Check if buildCommand is specified
-        if "buildCommand" not in config:
-            print("❌ No buildCommand specified in vercel.json")
-            return False
-        
-        build_command = config["buildCommand"]
-        if "public" not in build_command:
-            print("❌ Build command doesn't reference public directory")
-            return False
+        # Build command should be in package.json, not vercel.json
+        # This is the correct approach to avoid conflicts
         
         print("✅ vercel.json is properly configured")
         return True

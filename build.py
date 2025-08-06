@@ -305,12 +305,19 @@ def create_public_directory(output_dir="public"):
     with open(output_path / "index.html", "w", encoding="utf-8") as f:
         f.write(index_html)
     
-    # Create favicon.ico (simple text-based)
-    favicon_content = """data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAA=="""
+    # Create a simple text-based favicon (will be handled by build.py)
+    favicon_ico = """<!DOCTYPE html>
+<html>
+<head>
+    <title>DocQuery Favicon</title>
+</head>
+<body>
+    <p>DocQuery Favicon</p>
+</body>
+</html>"""
     
-    # Create a simple text file for favicon (browsers will handle it)
     with open(output_path / "favicon.ico", "w") as f:
-        f.write("DocQuery Favicon")
+        f.write(favicon_ico)
     
     # Create robots.txt
     robots_txt = """User-agent: *

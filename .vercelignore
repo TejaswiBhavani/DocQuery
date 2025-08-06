@@ -1,0 +1,66 @@
+# Development and test files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Documentation and demo files
+IMPLEMENTATION_SUMMARY.md
+VERCEL_DEPLOYMENT_FIXED.md
+VERCEL_ERROR_HANDLING.md
+VERCEL_FIX.md
+demo_*.py
+test_*.py
+*_test.py
+
+# Sample files
+sample_*.txt
+
+# Build artifacts (except public/)
+dist/
+build/
+*.egg-info/
+
+# Docker files
+Dockerfile
+docker-compose.yml
+
+# Local development
+.streamlit/
+Procfile
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp

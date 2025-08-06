@@ -7,7 +7,7 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb",
-        "runtime": "python3.12"
+        "runtime": "python3.11"
       }
     },
     {
@@ -18,6 +18,18 @@
   "routes": [
     {
       "src": "/api/(.*)",
+      "dest": "/api.py"
+    },
+    {
+      "src": "/health",
+      "dest": "/api.py"
+    },
+    {
+      "src": "/docs",
+      "dest": "/api.py"
+    },
+    {
+      "src": "/openapi.json",
       "dest": "/api.py"
     },
     {

@@ -28,11 +28,17 @@ class DocQueryErrorHandler:
     
     def setup_logging(self):
         """Setup logging configuration."""
+        import tempfile
+        
+        # Create log file in temporary directory
+        temp_dir = tempfile.gettempdir()
+        log_file = os.path.join(temp_dir, 'docquery.log')
+        
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[
-                logging.FileHandler('/tmp/docquery.log'),
+                logging.FileHandler(log_file),
                 logging.StreamHandler()
             ]
         )

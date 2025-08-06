@@ -1,60 +1,62 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api.py": {
+      "runtime": "python3.12",
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
     {
-      "src": "api.py", 
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "runtime": "python3.12"
-      }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+      "source": "/api/(.*)",
+      "destination": "/api.py"
     }
   ],
-  "routes": [
+  "redirects": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api.py"
+      "source": "/robots.txt",
+      "destination": "/public/robots.txt"
     },
     {
-      "src": "/",
-      "dest": "/public/index.html"
+      "source": "/sitemap.xml", 
+      "destination": "/public/sitemap.xml"
     },
     {
-      "src": "/robots.txt",
-      "dest": "/public/robots.txt"
+      "source": "/favicon.ico",
+      "destination": "/public/favicon.ico"
     },
     {
-      "src": "/sitemap.xml", 
-      "dest": "/public/sitemap.xml"
+      "source": "/manifest.json",
+      "destination": "/public/manifest.json"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/public/favicon.ico"
-    },
+      "source": "/style.css",
+      "destination": "/public/style.css"
+    }
+  ],
+  "headers": [
     {
-      "src": "/manifest.json",
-      "dest": "/public/manifest.json"
-    },
-    {
-      "src": "/style.css",
-      "dest": "/public/style.css"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ],
   "env": {
     "VERCEL_DEPLOYMENT": "true",
     "PYTHONPATH": "."
-  },
-  "functions": {
-    "api.py": {
-      "maxDuration": 30
-    }
   }
 }

@@ -482,16 +482,5 @@ if __name__ == "__main__":
     )
 
 # Vercel serverless function handler
-def handler(request):
-    """Handler for Vercel serverless deployment."""
-    import os
-    from fastapi import Request
-    from fastapi.responses import JSONResponse
-    
-    # Set up the app for serverless execution if not already done
-    if not hasattr(handler, '_app_initialized'):
-        os.environ.setdefault('VERCEL_DEPLOYMENT', 'true')
-        handler._app_initialized = True
-    
-    # Return app instance for Vercel
-    return app
+# This exports the app for Vercel to use
+app = app

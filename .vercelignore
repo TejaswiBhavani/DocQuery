@@ -1,0 +1,73 @@
+# Vercel ignore file - exclude files that shouldn't be deployed
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Development files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test files
+test_*.py
+*_test.py
+tests/
+__tests__/
+
+# Documentation (not needed for deployment)
+README.md
+DEPLOYMENT.md
+IMPLEMENTATION_SUMMARY.md
+VERCEL_*.md
+API_README.md
+
+# Docker files (not needed for Vercel)
+Dockerfile
+docker-compose.yml
+
+# Build artifacts (will be regenerated)
+.vercel/
+dist/
+build/
+
+# Demo and sample files
+demo_*.py
+sample_*.txt
+test_suite.py
+verify_deployment.py
+
+# Shell scripts (not needed for Vercel)
+*.sh
+
+# Git files
+.git/
+.gitignore

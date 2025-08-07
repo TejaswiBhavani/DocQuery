@@ -6,15 +6,28 @@ import time
 
 # Configure environment for Streamlit deployment
 def setup_environment():
-    """Setup environment variables for Streamlit deployment."""
-    # Read PORT environment variable (default 8501)
-    port = int(os.getenv('PORT', '8501'))
+    """Setup environment variables for Streamlit deployment with robust port handling."""
+    # Read PORT environment variable with robust parsing
+    port_env = os.getenv('PORT', '8501')
+    try:
+        port = int(port_env)
+        # Validate port range
+        if not (1024 <= port <= 65535):
+            print(f"Warning: PORT {port} is outside typical range, using 8501")
+            port = 8501
+    except (ValueError, TypeError):
+        print(f"Warning: Invalid PORT value '{port_env}', using 8501")
+        port = 8501
+    
+    print(f"DocQuery: Configured to run on port {port}")
     
     # Set Streamlit environment variables if not already set
     os.environ.setdefault('STREAMLIT_SERVER_PORT', str(port))
     os.environ.setdefault('STREAMLIT_SERVER_ADDRESS', '0.0.0.0')
     os.environ.setdefault('STREAMLIT_SERVER_HEADLESS', 'true')
     os.environ.setdefault('STREAMLIT_BROWSER_GATHER_USAGE_STATS', 'false')
+    os.environ.setdefault('STREAMLIT_SERVER_ENABLE_CORS', 'true')
+    os.environ.setdefault('STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION', 'false')
     
     return port
 
@@ -895,14 +908,27 @@ def handler(event, context):
 if __name__ == "__main__":
     import os
     
-    # Read PORT environment variable (default 8501 for Streamlit)
-    port = int(os.getenv('PORT', '8501'))
+    # Read PORT environment variable with robust error handling
+    port_env = os.getenv('PORT', '8501')
+    try:
+        port = int(port_env)
+        # Validate port range
+        if not (1024 <= port <= 65535):
+            print(f"Warning: PORT {port} is outside typical range, using 8501")
+            port = 8501
+    except (ValueError, TypeError):
+        print(f"Warning: Invalid PORT value '{port_env}', using 8501")
+        port = 8501
+    
+    print(f"DocQuery: Starting on port {port}")
     
     # Set Streamlit configuration via environment variables
     os.environ.setdefault('STREAMLIT_SERVER_PORT', str(port))
     os.environ.setdefault('STREAMLIT_SERVER_ADDRESS', '0.0.0.0')
     os.environ.setdefault('STREAMLIT_SERVER_HEADLESS', 'true')
     os.environ.setdefault('STREAMLIT_BROWSER_GATHER_USAGE_STATS', 'false')
+    os.environ.setdefault('STREAMLIT_SERVER_ENABLE_CORS', 'true')
+    os.environ.setdefault('STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION', 'false')
     
     # Run the main Streamlit app
     main()

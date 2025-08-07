@@ -2,6 +2,8 @@
 
 An advanced document analysis system designed for real-world scenarios in insurance, legal, HR, and compliance domains. The system processes large documents and makes contextual decisions with explainable rationale.
 
+> **✨ Recently Cleaned Up**: Repository streamlined from 70+ files to 20 essential files while maintaining 100% functionality and test coverage.
+
 ## 🚀 Features
 
 ### Core Capabilities

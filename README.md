@@ -217,7 +217,25 @@ The repository includes sample insurance policy documents:
 
 ## 🚀 Deployment
 
-### Render Deployment (Recommended)
+### Vercel Deployment (FIXED! ✅)
+**Issue Resolved**: If you were seeing only an image instead of the app on Vercel, this is now fixed!
+
+The repository now includes a complete Vercel-compatible version with:
+- ✅ **Static HTML interface** that works on Vercel's serverless platform
+- ✅ **API endpoints** optimized for fast cold starts
+- ✅ **Same functionality** as the Streamlit version
+- ✅ **Mobile-responsive design** with modern UI
+
+📋 **[Complete Vercel Fix Documentation](VERCEL_FIX.md)**
+
+**Quick Deploy to Vercel:**
+1. Connect your GitHub repository to Vercel
+2. Deploy automatically - uses the included `vercel.json` configuration
+3. Access your site - you'll see the new functional interface
+
+### Alternative Deployment Options
+
+#### Render Deployment (For Full Streamlit Features)
 Deploy to Render with one click using the included configuration:
 - **Automatic Setup**: Uses `render.yaml` for zero-config deployment
 - **Free Tier Available**: Perfect for development and testing
@@ -225,20 +243,10 @@ Deploy to Render with one click using the included configuration:
 
 📋 **[Complete Render Deployment Guide](RENDER_DEPLOYMENT.md)**
 
-Quick deploy options:
-1. **Fork this repository**
-2. **Connect to Render** → New Web Service → GitHub repo
-3. **Deploy automatically** with included `render.yaml`
-
-### Other Platforms
+#### Other Platforms
 - **Heroku**: `git push heroku main` (uses included Procfile)
 - **Railway**: Connect GitHub repository for automatic deployment
 - **Streamlit Cloud**: Perfect for Streamlit apps
-
-### Vercel Deployment Issues
-If you're experiencing issues with Vercel deployment (seeing only an image instead of the app), please see [VERCEL_FIX.md](VERCEL_FIX.md) for detailed solutions and alternative deployment options.
-
-**TL;DR**: Vercel works best for API endpoints, but Streamlit apps need persistent servers. **Render is now the recommended deployment platform**.
 
 ## 🔒 Privacy & Compliance
 

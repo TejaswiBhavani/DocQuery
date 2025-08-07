@@ -217,16 +217,28 @@ The repository includes sample insurance policy documents:
 
 ## 🚀 Deployment
 
-### Recommended Platforms
+### Render Deployment (Recommended)
+Deploy to Render with one click using the included configuration:
+- **Automatic Setup**: Uses `render.yaml` for zero-config deployment
+- **Free Tier Available**: Perfect for development and testing
+- **Full Feature Support**: All AI capabilities work out of the box
+
+📋 **[Complete Render Deployment Guide](RENDER_DEPLOYMENT.md)**
+
+Quick deploy options:
+1. **Fork this repository**
+2. **Connect to Render** → New Web Service → GitHub repo
+3. **Deploy automatically** with included `render.yaml`
+
+### Other Platforms
 - **Heroku**: `git push heroku main` (uses included Procfile)
 - **Railway**: Connect GitHub repository for automatic deployment
-- **Render**: Free tier available with GitHub integration
 - **Streamlit Cloud**: Perfect for Streamlit apps
 
 ### Vercel Deployment Issues
 If you're experiencing issues with Vercel deployment (seeing only an image instead of the app), please see [VERCEL_FIX.md](VERCEL_FIX.md) for detailed solutions and alternative deployment options.
 
-**TL;DR**: Vercel works best for the API endpoints, but Streamlit apps need persistent servers. Use Heroku, Railway, or Streamlit Cloud for the full web interface.
+**TL;DR**: Vercel works best for API endpoints, but Streamlit apps need persistent servers. **Render is now the recommended deployment platform**.
 
 ## 🔒 Privacy & Compliance
 

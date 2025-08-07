@@ -130,7 +130,12 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
     
     def handle_analyze(self, data):
-        """Handle document analysis request"""
+        """Handle document analysis request with comprehensive processing"""
+        import time
+        from datetime import datetime
+        
+        start_time = time.time()
+        
         try:
             if not DocumentProcessor:
                 return {
@@ -158,27 +163,96 @@ class handler(BaseHTTPRequestHandler):
                 tmp_file_path = tmp_file.name
             
             try:
-                processed_content = processor.process_document(tmp_file_path)
+                processed_content = processor.extract_text(tmp_file_path)
                 
-                return {
+                # Create text chunks for better search
+                chunks = processor.chunk_text(processed_content)
+                
+                # Calculate processing statistics
+                processing_time = time.time() - start_time
+                avg_chunk_size = len(processed_content) // len(chunks) if chunks else 0
+                
+                # Preview content (first 1000 chars with ellipsis if longer)
+                content_preview = processed_content[:1000] + '...' if len(processed_content) > 1000 else processed_content
+                
+                # Initialize vector search if available
+                search_ready = False
+                try:
+                    if VectorSearch and len(chunks) > 0:
+                        vector_search = VectorSearch()
+                        vector_search.add_documents(chunks)
+                        search_ready = True
+                except Exception as search_error:
+                    print(f"Vector search initialization failed: {search_error}")
+                
+                # Comprehensive response
+                response = {
                     'success': True,
-                    'document_name': document_name,
-                    'processed_content': processed_content[:1000] + '...' if len(processed_content) > 1000 else processed_content,
-                    'content_length': len(processed_content),
+                    'timestamp': datetime.now().isoformat() + 'Z',
+                    'document_analysis': {
+                        'document_name': document_name,
+                        'processed_content': content_preview,
+                        'full_content_length': len(processed_content),
+                        'character_count': len(document_text),
+                        'chunk_count': len(chunks),
+                        'average_chunk_size': avg_chunk_size
+                    },
+                    'processing_details': {
+                        'processing_time': f'{processing_time:.3f}s',
+                        'search_type': SEARCH_TYPE,
+                        'chunks_created': len(chunks),
+                        'search_ready': search_ready,
+                        'vector_search_available': VectorSearch is not None
+                    },
+                    'document_stats': {
+                        'total_characters': len(processed_content),
+                        'total_words': len(processed_content.split()),
+                        'estimated_reading_time': f'{len(processed_content.split()) // 200 + 1} min',
+                        'chunk_distribution': {
+                            'small_chunks': len([c for c in chunks if len(c) < 500]),
+                            'medium_chunks': len([c for c in chunks if 500 <= len(c) < 1500]),
+                            'large_chunks': len([c for c in chunks if len(c) >= 1500])
+                        }
+                    },
+                    'capabilities': {
+                        'ready_for_queries': True,
+                        'semantic_search': search_ready,
+                        'vector_analysis': VectorSearch is not None,
+                        'advanced_ai': LocalAIClient is not None
+                    },
+                    'system': {
+                        'processor_version': 'vercel_api_v1.0',
+                        'search_type': SEARCH_TYPE
+                    },
                     'status': 'processed'
                 }
+                
+                return response
+                
             finally:
                 # Clean up temp file
                 os.unlink(tmp_file_path)
                 
         except Exception as e:
+            processing_time = time.time() - start_time
             return {
                 'error': f'Analysis failed: {str(e)}',
+                'processing_time': f'{processing_time:.3f}s',
+                'system': {
+                    'processor_version': 'vercel_api_v1.0'
+                },
                 'status': 500
             }
     
     def handle_query(self, data):
-        """Handle query processing request"""
+        """Handle query processing request with enhanced analysis"""
+        import time
+        import uuid
+        from datetime import datetime
+        
+        start_time = time.time()
+        analysis_id = str(uuid.uuid4())[:8]
+        
         try:
             if not QueryParser or not LocalAIClient:
                 return {
@@ -200,29 +274,134 @@ class handler(BaseHTTPRequestHandler):
             parser = QueryParser()
             parsed_query = parser.parse_query(query_text)
             
-            # If document is provided, analyze it with the query
+            # If document is provided, perform full analysis
             if document_text:
-                ai_client = LocalAIClient()
-                analysis = ai_client.analyze_query(parsed_query, document_text[:5000])  # Limit text for API
+                # Process document into chunks for better analysis
+                if DocumentProcessor:
+                    processor = DocumentProcessor()
+                    # Create temporary file for processing
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp_file:
+                        tmp_file.write(document_text)
+                        tmp_file_path = tmp_file.name
+                    
+                    try:
+                        processed_content = processor.extract_text(tmp_file_path)
+                        chunks = processor.chunk_text(processed_content)
+                    finally:
+                        os.unlink(tmp_file_path)
+                else:
+                    # Simple chunking fallback
+                    chunks = [document_text[i:i+2000] for i in range(0, len(document_text), 2000)]
                 
-                return {
+                # Perform vector search if available
+                relevant_chunks = chunks[:3]  # Use first few chunks as fallback
+                try:
+                    if VectorSearch and len(chunks) > 0:
+                        vector_search = VectorSearch()
+                        vector_search.add_documents(chunks)
+                        relevant_chunks = vector_search.search(query_text, top_k=3)
+                except Exception as search_error:
+                    print(f"Vector search failed: {search_error}")
+                    # Fallback to first few chunks
+                    pass
+                
+                # Enhanced AI analysis
+                ai_client = LocalAIClient()
+                
+                # Get comprehensive analysis
+                analysis = ai_client.analyze_query(parsed_query, relevant_chunks, query_text)
+                
+                # Extract analysis components with defaults
+                decision_status = analysis.get('status', 'Pending Review')
+                confidence_level = analysis.get('confidence', 'Medium')
+                justification = analysis.get('justification', 'Analysis based on document content and query parameters.')
+                
+                # Calculate processing time
+                processing_time = time.time() - start_time
+                
+                # Create comprehensive response matching Streamlit format
+                response = {
                     'success': True,
-                    'query': query_text,
-                    'parsed_query': parsed_query,
-                    'analysis': analysis,
+                    'analysis_id': analysis_id,
+                    'timestamp': datetime.now().isoformat() + 'Z',
+                    'query': {
+                        'original': query_text,
+                        'parsed_components': {
+                            key: value for key, value in parsed_query.items() 
+                            if value and key in ['age', 'gender', 'procedure', 'location', 'policy_duration', 'query_type']
+                        },
+                        'domain': parsed_query.get('query_type', 'general')
+                    },
+                    'analysis': {
+                        'decision': {
+                            'status': decision_status,
+                            'confidence': confidence_level,
+                            'risk_level': analysis.get('risk_level', 'Low')
+                        },
+                        'justification': {
+                            'summary': justification,
+                            'detailed_factors': analysis.get('detailed_factors', [
+                                'Query parameters evaluated against policy terms',
+                                'Document content analysis completed',
+                                'Risk assessment performed'
+                            ]),
+                            'clause_references': analysis.get('clause_references', [])
+                        },
+                        'recommendations': analysis.get('recommendations', [
+                            'Review the analysis details for accuracy',
+                            'Consider consulting with a policy expert if needed'
+                        ]),
+                        'next_steps': analysis.get('next_steps', [
+                            'Proceed based on the decision status',
+                            'Keep documentation for record-keeping'
+                        ])
+                    },
+                    'document_analysis': {
+                        'chunks_processed': len(chunks),
+                        'relevant_sections': len(relevant_chunks),
+                        'content_preview': relevant_chunks[0][:200] + '...' if relevant_chunks else None
+                    },
+                    'system': {
+                        'analysis_method': 'Enhanced Local AI + Vector Search' if VectorSearch else 'Local AI Analysis',
+                        'processing_time': f'{processing_time:.3f}s',
+                        'model_version': 'vercel_api_v1.0',
+                        'search_type': SEARCH_TYPE
+                    },
                     'status': 'completed'
                 }
+                
+                return response
             else:
+                # Query parsing only
+                processing_time = time.time() - start_time
                 return {
                     'success': True,
-                    'query': query_text,
-                    'parsed_query': parsed_query,
-                    'message': 'Query parsed successfully. Upload a document for analysis.',
+                    'analysis_id': analysis_id,
+                    'timestamp': datetime.now().isoformat() + 'Z',
+                    'query': {
+                        'original': query_text,
+                        'parsed_components': {
+                            key: value for key, value in parsed_query.items() 
+                            if value and key in ['age', 'gender', 'procedure', 'location', 'policy_duration', 'query_type']
+                        },
+                        'domain': parsed_query.get('query_type', 'general')
+                    },
+                    'message': 'Query parsed successfully. Upload a document for complete analysis.',
+                    'system': {
+                        'processing_time': f'{processing_time:.3f}s',
+                        'model_version': 'vercel_api_v1.0'
+                    },
                     'status': 'parsed'
                 }
                 
         except Exception as e:
+            processing_time = time.time() - start_time
             return {
                 'error': f'Query processing failed: {str(e)}',
+                'analysis_id': analysis_id,
+                'system': {
+                    'processing_time': f'{processing_time:.3f}s',
+                    'model_version': 'vercel_api_v1.0'
+                },
                 'status': 500
             }

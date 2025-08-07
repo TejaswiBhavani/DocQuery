@@ -8,37 +8,65 @@ import io
 # Add the parent directory to the path so we can import our modules
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-try:
-    from document_processor import DocumentProcessor
-    from query_parser import QueryParser
-    from local_ai_client import LocalAIClient
-    from database_manager import DatabaseManager
-    from dependency_checker import DependencyChecker
+# Global variables to cache imports and avoid re-importing
+_modules_cached = False
+_DocumentProcessor = None
+_QueryParser = None
+_LocalAIClient = None
+_DatabaseManager = None
+_DependencyChecker = None
+_VectorSearch = None
+_SEARCH_TYPE = "Loading..."
+
+def ensure_modules_loaded():
+    """Load modules once and cache them for better performance"""
+    global _modules_cached, _DocumentProcessor, _QueryParser, _LocalAIClient
+    global _DatabaseManager, _DependencyChecker, _VectorSearch, _SEARCH_TYPE
     
-    # Try to import advanced vector search, fallback to simpler alternatives
+    if _modules_cached:
+        return
+    
     try:
-        from vector_search import VectorSearch
-        SEARCH_TYPE = "Advanced semantic search with sentence transformers"
-    except ImportError:
+        from document_processor import DocumentProcessor
+        from query_parser import QueryParser
+        from local_ai_client import LocalAIClient
+        from database_manager import DatabaseManager
+        from dependency_checker import DependencyChecker
+        
+        _DocumentProcessor = DocumentProcessor
+        _QueryParser = QueryParser
+        _LocalAIClient = LocalAIClient
+        _DatabaseManager = DatabaseManager
+        _DependencyChecker = DependencyChecker
+        
+        # Try to import advanced vector search, fallback to simpler alternatives
         try:
-            from enhanced_vector_search import EnhancedVectorSearch as VectorSearch
-            SEARCH_TYPE = "Enhanced semantic search with TF-IDF"
+            from vector_search import VectorSearch
+            _VectorSearch = VectorSearch
+            _SEARCH_TYPE = "Advanced semantic search with sentence transformers"
         except ImportError:
-            from simple_vector_search import SimpleVectorSearch as VectorSearch
-            SEARCH_TYPE = "Simple text-based search"
-except ImportError as e:
-    print(f"Import error: {e}")
-    # Fallback to minimal functionality
-    DocumentProcessor = None
-    QueryParser = None
-    LocalAIClient = None
-    DatabaseManager = None
-    DependencyChecker = None
-    VectorSearch = None
-    SEARCH_TYPE = "Limited functionality"
+            try:
+                from enhanced_vector_search import EnhancedVectorSearch
+                _VectorSearch = EnhancedVectorSearch
+                _SEARCH_TYPE = "Enhanced semantic search with TF-IDF"
+            except ImportError:
+                from simple_vector_search import SimpleVectorSearch
+                _VectorSearch = SimpleVectorSearch
+                _SEARCH_TYPE = "Simple text-based search"
+                
+        _modules_cached = True
+        
+    except ImportError as e:
+        print(f"Import error: {e}")
+        # Fallback to minimal functionality
+        _SEARCH_TYPE = "Limited functionality"
+        _modules_cached = True
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        # Ensure modules are loaded
+        ensure_modules_loaded()
+        
         # Handle status check
         if self.path == '/api/status':
             self.send_response(200)
@@ -47,12 +75,22 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             
             # Check system status
-            if DependencyChecker:
-                dep_checker = DependencyChecker()
-                capabilities = dep_checker.get_capabilities_summary()
+            if _DependencyChecker:
+                try:
+                    dep_checker = _DependencyChecker()
+                    capabilities = dep_checker.get_capabilities_summary()
+                except Exception:
+                    capabilities = {
+                        'basic_functionality': True,
+                        'pdf_processing': bool(_DocumentProcessor),
+                        'word_processing': False,
+                        'advanced_ai': bool(_LocalAIClient),
+                        'semantic_search': bool(_VectorSearch)
+                    }
             else:
                 capabilities = {
                     'basic_functionality': False,
+                    'pdf_processing': False,
                     'word_processing': False,
                     'advanced_ai': False,
                     'semantic_search': False
@@ -60,9 +98,10 @@ class handler(BaseHTTPRequestHandler):
             
             response = {
                 'status': 'online',
-                'search_type': SEARCH_TYPE,
+                'search_type': _SEARCH_TYPE,
                 'capabilities': capabilities,
-                'message': 'DocQuery API is running on Vercel'
+                'message': 'DocQuery API is running on Vercel',
+                'python_version': sys.version.split()[0]
             }
             
             self.wfile.write(json.dumps(response).encode())
@@ -79,13 +118,18 @@ class handler(BaseHTTPRequestHandler):
             'endpoints': [
                 '/api/status - Check system status',
                 '/api/analyze - Analyze document (POST)',
-                '/api/query - Query documents (POST)'
-            ]
+                '/api/query - Query documents (POST)',
+                '/api/health - Simple health check'
+            ],
+            'version': '1.0.0'
         }
         
         self.wfile.write(json.dumps(response).encode())
     
     def do_POST(self):
+        # Ensure modules are loaded
+        ensure_modules_loaded()
+        
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         
@@ -118,7 +162,8 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             error_response = {
                 'error': f'Server error: {str(e)}',
-                'status': 500
+                'status': 500,
+                'details': f'Python {sys.version.split()[0]} on Vercel'
             }
             self.wfile.write(json.dumps(error_response).encode())
     
@@ -132,7 +177,7 @@ class handler(BaseHTTPRequestHandler):
     def handle_analyze(self, data):
         """Handle document analysis request"""
         try:
-            if not DocumentProcessor:
+            if not _DocumentProcessor:
                 return {
                     'error': 'Document processing not available',
                     'message': 'Core dependencies missing',
@@ -150,7 +195,7 @@ class handler(BaseHTTPRequestHandler):
                 }
             
             # Process the document
-            processor = DocumentProcessor()
+            processor = _DocumentProcessor()
             
             # Create a temporary file for processing
             with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp_file:
@@ -169,7 +214,10 @@ class handler(BaseHTTPRequestHandler):
                 }
             finally:
                 # Clean up temp file
-                os.unlink(tmp_file_path)
+                try:
+                    os.unlink(tmp_file_path)
+                except:
+                    pass
                 
         except Exception as e:
             return {
@@ -180,7 +228,7 @@ class handler(BaseHTTPRequestHandler):
     def handle_query(self, data):
         """Handle query processing request"""
         try:
-            if not QueryParser or not LocalAIClient:
+            if not _QueryParser:
                 return {
                     'error': 'Query processing not available',
                     'message': 'Core dependencies missing',
@@ -197,21 +245,31 @@ class handler(BaseHTTPRequestHandler):
                 }
             
             # Parse the query
-            parser = QueryParser()
+            parser = _QueryParser()
             parsed_query = parser.parse_query(query_text)
             
             # If document is provided, analyze it with the query
-            if document_text:
-                ai_client = LocalAIClient()
-                analysis = ai_client.analyze_query(parsed_query, document_text[:5000])  # Limit text for API
-                
-                return {
-                    'success': True,
-                    'query': query_text,
-                    'parsed_query': parsed_query,
-                    'analysis': analysis,
-                    'status': 'completed'
-                }
+            if document_text and _LocalAIClient:
+                try:
+                    ai_client = _LocalAIClient()
+                    analysis = ai_client.analyze_query(parsed_query, document_text[:5000])  # Limit text for API
+                    
+                    return {
+                        'success': True,
+                        'query': query_text,
+                        'parsed_query': parsed_query,
+                        'analysis': analysis,
+                        'status': 'completed'
+                    }
+                except Exception as e:
+                    # Fallback to basic analysis if AI client fails
+                    return {
+                        'success': True,
+                        'query': query_text,
+                        'parsed_query': parsed_query,
+                        'message': f'Query parsed successfully. AI analysis failed: {str(e)}',
+                        'status': 'parsed'
+                    }
             else:
                 return {
                     'success': True,

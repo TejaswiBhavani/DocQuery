@@ -1,0 +1,12 @@
+{
+  "name": "docquery",
+  "version": "1.0.0",
+  "description": "AI Document Analysis Tool",
+  "scripts": {
+    "build": "echo 'Building DocQuery static assets...' && echo 'Build complete'",
+    "start": "echo 'DocQuery is deployed on Vercel'"
+  },
+  "keywords": ["ai", "document", "analysis", "vercel"],
+  "author": "TejaswiBhavani",
+  "license": "MIT"
+}

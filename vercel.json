@@ -3,18 +3,11 @@
   "functions": {
     "api/**/*.js": {
       "runtime": "@vercel/node@20.x"
+    },
+    "api.py": {
+      "runtime": "@vercel/python"
     }
   },
-  "builds": [
-    {
-      "src": "api.py",
-      "use": "@vercel/python@3.12.0"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",

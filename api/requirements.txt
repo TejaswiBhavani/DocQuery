@@ -1,0 +1,12 @@
+# Vercel-optimized requirements for DocQuery API
+# Core dependencies only to reduce cold start time
+
+# Document processing
+PyPDF2>=3.0.0
+
+# Basic AI and ML
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Optional enhanced features (will gracefully fallback if not available)
+python-docx>=0.8.11

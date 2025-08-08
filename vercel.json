@@ -1,31 +1,23 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "pages/**/*.js",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "api/**/*.py",
+      "use": "@vercel/python"
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "pages/$1"
     }
-  ],
-  "functions": {
-    "api/upload.py": {
-      "runtime": "python@3.9",
-      "maxDuration": 30
-    },
-    "api/search.py": {
-      "runtime": "python@3.9", 
-      "maxDuration": 30
-    },
-    "api/analyze.py": {
-      "runtime": "python@3.9",
-      "maxDuration": 30
-    },
-    "api/index.py": {
-      "runtime": "python@3.9",
-      "maxDuration": 30
-    }
-  }
+  ]
 }

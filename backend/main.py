@@ -16,10 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
-# Add parent directory to path to import existing modules
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# Import existing modules (unchanged)
+# Import modules from current backend directory
 from document_processor import DocumentProcessor
 from query_parser import QueryParser
 from output_formatter import OutputFormatter

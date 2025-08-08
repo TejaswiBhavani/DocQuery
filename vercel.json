@@ -3,17 +3,17 @@
   "builds": [
     {
       "src": "frontend/package.json",
-      "use": "@vercel/node"
+      "use": "@vercel/next"
     },
     {
-      "src": "backend/main.py",
+      "src": "api/*.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/api/backend/(.*)",
-      "dest": "/backend/main.py"
+      "src": "/api/(.*)",
+      "dest": "/api/$1.py"
     },
     {
       "src": "/(.*)",
@@ -21,12 +21,18 @@
     }
   ],
   "functions": {
-    "backend/main.py": {
+    "api/upload.py": {
+      "runtime": "python3.11",
+      "maxDuration": 30
+    },
+    "api/search.py": {
+      "runtime": "python3.11", 
+      "maxDuration": 30
+    },
+    "api/analyze.py": {
       "runtime": "python3.11",
       "maxDuration": 30
     }
   },
-  "env": {
-    "FASTAPI_URL": "http://localhost:8000"
-  }
+  "outputDirectory": "frontend/.next"
 }

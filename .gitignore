@@ -56,23 +56,36 @@ Thumbs.db
 # Vercel
 .vercel
 
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build
+frontend/dist
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment files
+.env.local
+.env.development
+.env.production
+
 # Large files and development artifacts - excluding root PDFs but allowing public/ PDFs
 /*.pdf
 uv.lock
 pyproject.toml
 repl_nix_workspace.egg-info/
 
-# Streamlit
-.streamlit/secrets.toml
+# Streamlit (removed references)
+.streamlit/
 
 # Deployment artifacts
 uploads/
 *.pid
-
-# Local development
-.env.local
-.env.development
-.env.production
 
 # Model caches
 models/

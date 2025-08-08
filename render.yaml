@@ -1,13 +1,16 @@
 services:
   - type: web
     name: docquery
-    env: python
+    region: oregon
+    plan: standard  # MUST specify paid tier
     buildCommand: |
-      pip install -r requirements.txt
+      pip install -e . &&
+      pip install --no-cache-dir transformers sentence-transformers faiss-cpu python-docx spacy &&
       python -m spacy download en_core_web_sm
-    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
     envVars:
       - key: PORT
         value: $PORT
-    healthCheckPath: /_stcore/health
-    plan: standard # Important for memory needs (1GB RAM minimum)
+      - key: PYTORCH_ENABLE_MPS_FALLBACK
+        value: 1

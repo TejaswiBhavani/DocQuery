@@ -1,5 +1,8 @@
-import streamlit as st
+# Add to the TOP of your app.py
 import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"  # Reduces memory pressure
+
+import streamlit as st
 import json
 import tempfile
 import time
@@ -40,6 +43,20 @@ from openai_client import OpenAIClient
 from local_ai_client import LocalAIClient
 from database_manager import DatabaseManager
 from dependency_checker import DependencyChecker
+
+# Replace your VectorSearch import with lazy loading
+def get_vector_search():
+    """Lazy load vector search to reduce startup memory"""
+    try:
+        from vector_search import VectorSearch
+        return VectorSearch()
+    except ImportError:
+        try:
+            from enhanced_vector_search import EnhancedVectorSearch
+            return EnhancedVectorSearch()
+        except ImportError:
+            from simple_vector_search import SimpleVectorSearch
+            return SimpleVectorSearch()
 
 # Try to import advanced vector search, fallback to simpler alternatives
 try:
@@ -394,8 +411,8 @@ def main():
                     progress_bar.progress(80)
                     status_text.text("🧠 Building search index...")
                     
-                    # Initialize vector search
-                    vector_search = VectorSearch()
+                    # Initialize vector search using lazy loading
+                    vector_search = get_vector_search()
                     vector_search.build_index(chunks)
 
                     progress_bar.progress(95)
@@ -904,6 +921,74 @@ def handler(event, context):
             'port': os.getenv('PORT', '8501')
         })
     }
+
+# FastAPI compatibility for uvicorn deployment
+try:
+    from fastapi import FastAPI
+    from fastapi.responses import JSONResponse, HTMLResponse
+    import subprocess
+    import threading
+    
+    # Create FastAPI app for uvicorn compatibility
+    app = FastAPI(title="DocQuery", version="1.0.0")
+    streamlit_process = None
+    
+    def start_streamlit():
+        """Start Streamlit in background"""
+        global streamlit_process
+        port = int(os.getenv('PORT', 8501))
+        streamlit_port = port + 100  # Use different port for Streamlit
+        
+        cmd = [
+            'streamlit', 'run', __file__,
+            '--server.port', str(streamlit_port),
+            '--server.address', '0.0.0.0',
+            '--server.headless', 'true',
+            '--server.fileWatcherType', 'none'
+        ]
+        
+        try:
+            streamlit_process = subprocess.Popen(cmd)
+            return streamlit_port
+        except Exception as e:
+            print(f"Failed to start Streamlit: {e}")
+            return None
+    
+    @app.on_event("startup")
+    async def startup_event():
+        """Start Streamlit when FastAPI starts"""
+        threading.Thread(target=start_streamlit, daemon=True).start()
+        import time
+        time.sleep(3)  # Give Streamlit time to start
+    
+    @app.get("/healthz")
+    async def health_check():
+        """Health check endpoint for Render"""
+        return JSONResponse(content={"status": "ok"}, status_code=200)
+    
+    @app.get("/")
+    async def root():
+        """Proxy to Streamlit interface"""
+        port = int(os.getenv('PORT', 8501)) + 100
+        return HTMLResponse(f"""
+        <html>
+            <head>
+                <title>DocQuery - AI Document Analysis</title>
+                <meta http-equiv="refresh" content="0; url=http://localhost:{port}/" />
+            </head>
+            <body>
+                <div style="text-align: center; padding: 2rem; font-family: Arial, sans-serif;">
+                    <h1>🤖 DocQuery</h1>
+                    <p>Loading AI Document Analysis interface...</p>
+                    <p><a href="http://localhost:{port}/">Click here if not redirected automatically</a></p>
+                </div>
+            </body>
+        </html>
+        """)
+
+except ImportError:
+    # If FastAPI not available, app object won't exist
+    pass
 
 if __name__ == "__main__":
     port = setup_environment()

@@ -1,133 +1,13 @@
-# Render deployment ignore file
-# Exclude large files and unnecessary build artifacts to reduce deployment size
-
-# Large model files and caches
+# .renderignore
 *.bin
 *.h5
 *.pt
 *.pkl
 *.model
-*.safetensors
-
-# Document samples and test files (keep essential ones)
 *.pdf
 *.docx
-*.doc
-
-# Development and build artifacts
+*.zip
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Logs and temporary files
-*.log
-*.tmp
-*.temp
-
-# Testing and coverage
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# Database files (should be handled via environment variables)
-*.db
-*.sqlite
-*.sqlite3
-
-# Model caches and downloads
-models/
 .cache/
-huggingface_cache/
-transformers_cache/
-.transformers_cache/
-
-# Jupyter notebooks
-*.ipynb_checkpoints/
-
-# Documentation and markdown (optional - keep essential ones)
-# *.md
-
-# Git directory (usually not needed in deployment)
-.git/
-
-# Vercel specific (not needed for Render)
-.vercel/
-vercel.json
-
-# Local development files
-.env.local
-.env.development
-.env.production
-
-# Large sample files (keep only essential samples)
-# sample_*.txt can be kept as they're small
-
-# Backup files
-*.bak
-*.backup
-
-# Streamlit secrets (should be in environment variables)
-.streamlit/secrets.toml
-
-# Any uploaded files directory
-uploads/
-temp/
-tmp/
-
-# Process ID files
-*.pid
-
-# Core dumps
-core
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
+models/
+data/

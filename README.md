@@ -57,17 +57,20 @@ Based on comprehensive testing with 20+ real-world scenarios:
 
 ## 🔧 Installation & Setup
 
-### Quick Start (Basic Functionality)
+### Quick Start (Development)
 ```bash
 # Clone the repository
 git clone https://github.com/TejaswiBhavani/DocQuery.git
 cd DocQuery
 
-# Install core dependencies
+# Install Python dependencies
 pip install -e .
 
-# Run the application
-streamlit run app.py --server.port 8080
+# Install frontend dependencies
+cd frontend && npm install && cd ..
+
+# Run the application (Next.js frontend + FastAPI backend)
+npm run dev
 ```
 
 ### Enhanced Setup (Full AI Capabilities)

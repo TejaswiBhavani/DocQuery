@@ -14,7 +14,7 @@ class DependencyChecker:
     
     def __init__(self):
         self.core_dependencies = {
-            'streamlit': 'Web interface',
+            'fastapi': 'Web API framework',
             'PyPDF2': 'PDF document processing',
             'numpy': 'Numerical operations',
             'sklearn': 'Machine learning and text analysis',  # scikit-learn imports as sklearn

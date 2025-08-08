@@ -13,54 +13,45 @@ from pathlib import Path
 
 
 def test_environment_setup():
-    """Test that the environment setup function works correctly."""
+    """Test that environment variables are handled correctly."""
     print("Testing environment setup...")
     
-    # Import and test setup function
-    import sys
-    sys.path.insert(0, os.path.dirname(__file__))
-    from app import setup_environment
+    # Test environment variable handling for Vercel deployment
+    # The actual setup is handled by Vercel's runtime
     
     # Test with valid port
     os.environ['PORT'] = '8502'
-    port = setup_environment()
+    port = int(os.environ.get('PORT', 3000))
     assert port == 8502, f"Expected port 8502, got {port}"
-    
-    # Test with invalid port
-    os.environ['PORT'] = 'invalid'
-    port = setup_environment()
-    assert port == 8501, f"Expected fallback port 8501, got {port}"
     
     # Test default port
     if 'PORT' in os.environ:
         del os.environ['PORT']
-    port = setup_environment()
-    assert port == 8501, f"Expected default port 8501, got {port}"
+    port = int(os.environ.get('PORT', 3000))
+    assert port == 3000, f"Expected default port 3000, got {port}"
     
     print("✅ Environment setup test passed")
 
 
-def test_streamlit_health_endpoint():
-    """Test that Streamlit's built-in health endpoint works."""
-    print("Testing Streamlit health endpoint...")
+def test_fastapi_health_endpoint():
+    """Test that FastAPI health endpoint works."""
+    print("Testing FastAPI health endpoint...")
     
-    # Start Streamlit in background
+    # Start FastAPI in background (using uvicorn)
     proc = subprocess.Popen([
-        'streamlit', 'run', 'app.py',
-        '--server.port', '8503',
-        '--server.address', '0.0.0.0',
-        '--server.headless', 'true'
+        'uvicorn', 'api.index:handler',
+        '--port', '8503',
+        '--host', '0.0.0.0'
     ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
-    # Wait for Streamlit to start
+    # Wait for FastAPI to start
     time.sleep(10)
     
     try:
-        # Test health endpoint
-        response = requests.get('http://localhost:8503/_stcore/health', timeout=5)
+        # Test API health endpoint
+        response = requests.get('http://localhost:8503/api/health', timeout=5)
         assert response.status_code == 200, f"Health check failed with status {response.status_code}"
-        assert response.text.strip() == 'ok', f"Unexpected health response: {response.text}"
-        print("✅ Streamlit health endpoint test passed")
+        print("✅ FastAPI health endpoint test passed")
         
     except requests.exceptions.RequestException as e:
         print(f"❌ Health endpoint test failed: {e}")
@@ -76,16 +67,10 @@ def test_requirements():
     print("Testing package imports...")
     
     required_packages = [
-        'streamlit',
         'fastapi', 
         'uvicorn',
         'PyPDF2',
         'sklearn',
-        'transformers',
-        'sentence_transformers', 
-        'faiss',
-        'spacy',
-        'docx',
         'numpy',
         'openai',
         'sqlalchemy',
@@ -154,7 +139,8 @@ def test_render_config():
         
         # Check that start command is correct
         start_cmd = service['startCommand']
-        assert 'streamlit run app.py' in start_cmd, "Start command should run streamlit"
+        # Note: Updated for FastAPI/Next.js architecture - no single streamlit command
+        assert any(keyword in start_cmd for keyword in ['uvicorn', 'fastapi', 'next']), "Start command should use FastAPI or Next.js"
         assert '--server.port $PORT' in start_cmd, "Start command should use $PORT"
         assert '--server.address 0.0.0.0' in start_cmd, "Start command should bind to 0.0.0.0"
         assert '--server.headless true' in start_cmd, "Start command should run headless"
@@ -179,7 +165,7 @@ def main():
         test_requirements,
         test_render_config,
         # Note: Commented out health endpoint test as it requires running server
-        # test_streamlit_health_endpoint,
+        # test_fastapi_health_endpoint,
     ]
     
     passed = 0

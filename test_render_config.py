@@ -113,7 +113,7 @@ def test_render_configuration():
         checks = [
             ("healthCheckPath: /healthz", "Health check path"),
             ("uvicorn healthz:app", "Health endpoint startup"),
-            ("streamlit run app.py", "Streamlit startup"),
+            ("uvicorn main:app", "FastAPI startup"),
             ("plan: starter", "Starter plan (1GB RAM)"),
             ("--port $PORT", "Port configuration"),
             ("--host 0.0.0.0", "Host binding")
@@ -148,7 +148,7 @@ def test_requirements():
         
         # Check for required packages
         required_packages = [
-            "streamlit",
+            "fastapi",
             "fastapi",
             "uvicorn",
             "psutil"

@@ -1,20 +1,30 @@
-fastapi
-uvicorn[standard]
-streamlit
+# Core web framework (replacing Streamlit)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
 python-multipart
+
+# Document processing
 PyPDF2
-scikit-learn
-transformers
-sentence-transformers
-faiss-cpu
-spacy
 python-docx
 
-# Additional dependencies for existing functionality
+# Core ML and NLP (optional - app works without these)
+scikit-learn
 numpy>=1.24.0
+
+# AI integrations (optional)
 openai>=1.97.1
+
+# Database (optional)
 sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
 pandas>=1.4.0
-pillow>=7.1.0
+
+# System utilities
 psutil>=5.9.0
+pillow>=7.1.0
+
+# Advanced ML dependencies (optional - commented out to reduce deployment size)
+# transformers
+# sentence-transformers  
+# faiss-cpu
+# spacy
+# psycopg2-binary>=2.9.0

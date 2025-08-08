@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "description": "AI-powered document analysis system with Next.js frontend and FastAPI serverless backend",
   "scripts": {
-    "dev": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
-    "start": "cd frontend && npm run start",
-    "install:all": "npm install && cd frontend && npm install",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "test:api": "python -m pytest api/ -v",
     "test:backend": "python -m pytest backend/ -v"
   },
-  "main": "frontend/pages/index.js",
+  "main": "pages/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/TejaswiBhavani/DocQuery.git"
@@ -26,5 +26,21 @@
   "engines": {
     "node": ">=18.0.0",
     "python": ">=3.11.0"
+  },
+  "dependencies": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0", 
+    "next": "15.4.6"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "15.4.6",
+    "@eslint/eslintrc": "^3"
   }
 }

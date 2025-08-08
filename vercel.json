@@ -12,19 +12,19 @@
   ],
   "functions": {
     "api/upload.py": {
-      "runtime": "python3.11",
+      "runtime": "python@3.9",
       "maxDuration": 30
     },
     "api/search.py": {
-      "runtime": "python3.11", 
+      "runtime": "python@3.9", 
       "maxDuration": 30
     },
     "api/analyze.py": {
-      "runtime": "python3.11",
+      "runtime": "python@3.9",
       "maxDuration": 30
     },
     "api/index.py": {
-      "runtime": "python3.11",
+      "runtime": "python@3.9",
       "maxDuration": 30
     }
   }

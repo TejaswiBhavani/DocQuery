@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "pages/**/*.js",
+      "src": "frontend/**/*.js",
       "use": "@vercel/next"
     },
     {
@@ -17,7 +17,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "pages/$1"
+      "dest": "frontend/$1"
     }
   ]
 }

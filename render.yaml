@@ -1,19 +1,13 @@
 services:
   - type: web
-    name: docquery-app
+    name: docquery
     env: python
-    plan: starter  # Changed from free to starter for 1GB RAM (required for AI models)
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn healthz:app --host 0.0.0.0 --port $PORT & streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
-    healthCheckPath: /healthz  # Health check endpoint for Render monitoring
+    buildCommand: |
+      pip install -r requirements.txt
+      python -m spacy download en_core_web_sm
+    startCommand: streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
     envVars:
-      - key: PYTHONUNBUFFERED
-        value: true
-      - key: STREAMLIT_SERVER_HEADLESS  
-        value: true
-      - key: STREAMLIT_BROWSER_GATHER_USAGE_STATS
-        value: false
-      - key: STREAMLIT_SERVER_ENABLE_CORS
-        value: true
-      - key: RENDER_SERVICE_NAME
-        value: docquery-app
+      - key: PORT
+        value: $PORT
+    healthCheckPath: /_stcore/health
+    plan: standard # Important for memory needs (1GB RAM minimum)

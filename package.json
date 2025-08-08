@@ -1,20 +1,28 @@
 {
   "name": "docquery",
   "version": "1.0.0",
-  "description": "AI-powered document analysis system with Next.js frontend and FastAPI backend",
+  "description": "AI-powered document analysis system with Next.js frontend and FastAPI serverless backend",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && python main.py",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:frontend",
-    "build:frontend": "cd frontend && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
     "start": "cd frontend && npm run start",
-    "install:frontend": "cd frontend && npm install",
-    "install:backend": "pip install -r requirements.txt"
+    "install:all": "npm install && cd frontend && npm install",
+    "test:api": "python -m pytest api/ -v",
+    "test:backend": "python -m pytest backend/ -v"
   },
-  "devDependencies": {
-    "concurrently": "^9.2.0"
+  "main": "frontend/pages/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TejaswiBhavani/DocQuery.git"
   },
+  "keywords": [
+    "ai",
+    "document-analysis",
+    "nextjs",
+    "fastapi", 
+    "vercel",
+    "serverless"
+  ],
   "engines": {
     "node": ">=18.0.0",
     "python": ">=3.11.0"

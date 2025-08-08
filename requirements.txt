@@ -1,4 +1,4 @@
-# Core web framework (replacing Streamlit)
+# Core web framework for serverless functions
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 python-multipart

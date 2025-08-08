@@ -2,22 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "frontend/package.json",
+      "src": "pages/**/*.js",
       "use": "@vercel/next"
     },
     {
-      "src": "api/*.py",
+      "src": "api/**/*.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1.py"
+      "dest": "api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/$1"
+      "dest": "pages/$1"
     }
   ],
   "functions": {
@@ -33,6 +33,5 @@
       "runtime": "python3.11",
       "maxDuration": 30
     }
-  },
-  "outputDirectory": "frontend/.next"
+  }
 }

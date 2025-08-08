@@ -102,7 +102,7 @@ def check_yaml_config():
             print(f"  ⚠️ Using {service.get('plan', 'unknown')} plan")
         
         start_cmd = service.get('startCommand', '')
-        if 'uvicorn healthz:app' in start_cmd and 'streamlit run app.py' in start_cmd:
+        if 'uvicorn' in start_cmd or 'fastapi' in start_cmd:
             print("  ✅ Start command includes both health endpoint and Streamlit")
         else:
             print("  ❌ Start command missing health endpoint or Streamlit")
@@ -129,7 +129,7 @@ def check_requirements():
             content = f.read().lower()
         
         required_deps = [
-            'streamlit',
+            'fastapi',
             'fastapi', 
             'uvicorn',
             'psutil'

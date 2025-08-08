@@ -81,7 +81,12 @@ def create_requirements_files():
     basic_reqs = """# Basic DocQuery requirements
 # Install with: pip install -r requirements-basic.txt
 
-streamlit>=1.47.0
+# Web framework (FastAPI for serverless deployment)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart
+
+# Core dependencies
 PyPDF2>=3.0.0
 numpy>=1.24.0
 scikit-learn>=1.3.0
@@ -95,7 +100,12 @@ openai>=1.97.1
 # Install with: pip install -r requirements-enhanced.txt
 
 # Core requirements
-streamlit>=1.47.0
+# Web framework (FastAPI for serverless deployment)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart
+
+# Document processing
 PyPDF2>=3.0.0
 numpy>=1.24.0
 scikit-learn>=1.3.0

@@ -89,3 +89,9 @@ transformers_cache/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Node.js dependencies (for root node_modules)
+/node_modules/
+/package-lock.json
+
+# Next.js frontend build artifacts are handled by frontend/.gitignore

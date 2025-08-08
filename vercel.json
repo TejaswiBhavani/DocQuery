@@ -1,23 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "pages/**/*.js",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "api/**/*.py",
-      "use": "@vercel/python"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "api/$1"
+      "dest": "/api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "pages/$1"
+      "dest": "/$1"
     }
   ],
   "functions": {
@@ -30,6 +20,10 @@
       "maxDuration": 30
     },
     "api/analyze.py": {
+      "runtime": "python3.11",
+      "maxDuration": 30
+    },
+    "api/index.py": {
       "runtime": "python3.11",
       "maxDuration": 30
     }
